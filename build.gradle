@@ -1,0 +1,17 @@
+plugins {
+    id 'java'
+}
+
+group 'com.lukamaret'
+version '0.1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation group: 'org.javacord', name: 'javacord', version: '3.3.2'
+    implementation group: 'com.google.inject', name: 'guice', version: '5.0.1'
+    implementation group: 'com.electronwill.night-config', name: 'toml', version: '3.6.5'
+    implementation group: 'com.zaxxer', name: 'HikariCP', version: '5.0.0'
+}
