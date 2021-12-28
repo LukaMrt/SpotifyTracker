@@ -21,8 +21,8 @@ public class PostgresPlaylistRepository implements PlaylistRepository {
         try {
             Connection connection = this.connection.getConnection();
 
-            PreparedStatement statement = connection.prepareStatement("SELECT * FROM playlist WHERE name = ?");
-            statement.setString(1, playlist.name);
+            PreparedStatement statement = connection.prepareStatement("SELECT * FROM playlist WHERE uri = ?");
+            statement.setString(1, playlist.uri);
             ResultSet result = statement.executeQuery();
 
             if (!result.next()) {
@@ -33,12 +33,16 @@ public class PostgresPlaylistRepository implements PlaylistRepository {
                 statement.execute();
             }
 
-            statement = connection.prepareStatement("SELECT * FROM playlist WHERE name = ?");
-            statement.setString(1, playlist.name);
+            statement = connection.prepareStatement("SELECT * FROM playlist WHERE uri = ?");
+            statement.setString(1, playlist.uri);
             result = statement.executeQuery();
             result.next();
 
             playlist = playlist.setId(result.getInt("id"));
+
+            if (result.getString("name") != null) {
+                playlist = playlist.setName(result.getString("name"));
+            }
 
             connection.close();
         } catch (SQLException e) {

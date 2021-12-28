@@ -2,13 +2,16 @@ package com.lukamaret.main.guice;
 
 import com.google.inject.AbstractModule;
 import com.lukamaret.domain.application.configuration.DatabaseConfiguration;
+import com.lukamaret.domain.application.configuration.DiscordConfiguration;
 import com.lukamaret.domain.application.configuration.SpotifyConfiguration;
+import com.lukamaret.domain.application.message.MessageSender;
 import com.lukamaret.domain.application.spotify.*;
 import com.lukamaret.infrastructure.database.DatabaseConnection;
 import com.lukamaret.infrastructure.spotify.PostgresArtistsRepository;
 import com.lukamaret.infrastructure.spotify.PostgresListeningRepository;
 import com.lukamaret.infrastructure.spotify.PostgresPlaylistRepository;
 import com.lukamaret.infrastructure.spotify.PostgresTrackRepository;
+import com.lukamaret.view.message.DiscordMessageSender;
 import com.wrapper.spotify.SpotifyApi;
 import org.javacord.api.DiscordApi;
 
@@ -19,17 +22,20 @@ public class MainModule extends AbstractModule {
     private final DatabaseConnection databaseConnection;
     private final SpotifyConfiguration spotifyConfiguration;
     private final DatabaseConfiguration databaseConfiguration;
+    private final DiscordConfiguration discordConfiguration;
 
     public MainModule(DiscordApi discord,
                       SpotifyApi spotify,
                       DatabaseConnection databaseConnection,
                       SpotifyConfiguration spotifyConfiguration,
-                      DatabaseConfiguration databaseConfiguration) {
+                      DatabaseConfiguration databaseConfiguration,
+                      DiscordConfiguration discordConfiguration) {
         this.discord = discord;
         this.spotify = spotify;
         this.databaseConnection = databaseConnection;
         this.spotifyConfiguration = spotifyConfiguration;
         this.databaseConfiguration = databaseConfiguration;
+        this.discordConfiguration = discordConfiguration;
     }
 
     @Override
@@ -39,11 +45,13 @@ public class MainModule extends AbstractModule {
         bind(DatabaseConnection.class).toInstance(databaseConnection);
         bind(SpotifyConfiguration.class).toInstance(spotifyConfiguration);
         bind(DatabaseConfiguration.class).toInstance(databaseConfiguration);
+        bind(DiscordConfiguration.class).toInstance(discordConfiguration);
         bind(TrackService.class);
         bind(TrackRepository.class).to(PostgresTrackRepository.class);
         bind(PlaylistRepository.class).to(PostgresPlaylistRepository.class);
         bind(ArtistsRepository.class).to(PostgresArtistsRepository.class);
         bind(ListeningRepository.class).to(PostgresListeningRepository.class);
+        bind(MessageSender.class).to(DiscordMessageSender.class);
     }
 
 }

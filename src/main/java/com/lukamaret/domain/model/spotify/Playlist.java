@@ -25,4 +25,8 @@ public class Playlist {
         return new Playlist(id, url, uri, name);
     }
 
+    public Playlist setName(String name) {
+        return new Playlist(id, url, uri, name);
+    }
+
 }

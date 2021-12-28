@@ -51,7 +51,7 @@ public class Main {
                 .withDatabase(databaseConfiguration.getDatabaseCredentials().getDatabase())
                 .build();
 
-        Injector injector = Guice.createInjector(new MainModule(discord, spotify, database, spotifyConfiguration, databaseConfiguration));
+        Injector injector = Guice.createInjector(new MainModule(discord, spotify, database, spotifyConfiguration, databaseConfiguration, discordConfiguration));
 
         new DiscordListenersRepository(injector).registerListeners();
         new DefaultTasksRepository(injector).registerTasks();

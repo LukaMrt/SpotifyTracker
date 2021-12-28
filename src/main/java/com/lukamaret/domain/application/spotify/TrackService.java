@@ -1,5 +1,7 @@
 package com.lukamaret.domain.application.spotify;
 
+import com.lukamaret.domain.application.configuration.DiscordConfiguration;
+import com.lukamaret.domain.application.message.MessageSender;
 import com.lukamaret.domain.model.spotify.Artist;
 import com.lukamaret.domain.model.spotify.Playlist;
 import com.lukamaret.domain.model.spotify.Track;
@@ -21,6 +23,12 @@ public class TrackService {
     @Inject
     private ArtistsRepository artistsRepository;
 
+    @Inject
+    private MessageSender messageSender;
+
+    @Inject
+    private DiscordConfiguration discordConfiguration;
+
     public void registerListening(Track track, Playlist playlist) {
         playlist = playlistRepository.save(playlist);
         List<Artist> artists = track.artists.stream()
@@ -29,6 +37,8 @@ public class TrackService {
         track = track.setArtists(artists);
         track = trackRepository.save(track);
         listeningRepository.save(track, playlist);
+
+        messageSender.sendListening(Long.parseLong(discordConfiguration.getLogsChannel()), track, playlist);
     }
 
 }

@@ -21,7 +21,7 @@ public class DefaultTasksRepository {
 
         tasks.forEach(task -> {
             Timer timer = new Timer();
-            timer.schedule(task, 0, 5 * 1000);
+            timer.schedule(task, 0, 60 * 1000);
         });
 
     }
