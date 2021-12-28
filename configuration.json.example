@@ -1,0 +1,24 @@
+{
+  "spotify": {
+    "credentials": {
+      "id": "id",
+      "secret": "secret"
+    },
+    "tokens": {
+      "accessToken": "accessToken",
+      "refreshToken": "refreshToken"
+    }
+  },
+  "discord": {
+    "token": "token",
+    "logs": "log_channel_id",
+    "guard": "guard_bot_id"
+  },
+  "database": {
+    "host": "localhost",
+    "port": 3306,
+    "user": "user",
+    "password": "password",
+    "database": "database"
+  }
+}
