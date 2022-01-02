@@ -1,9 +1,30 @@
 plugins {
     id 'java'
+    id "com.github.johnrengelman.shadow" version "7.1.2"
 }
 
 group 'com.lukamaret'
 version '0.1.0'
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src/main/java'
+        }
+    }
+}
+
+java {
+    sourceCompatibility = JavaVersion.toVersion('14')
+    targetCompatibility = JavaVersion.toVersion('14')
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'com.lukamaret.spotifytracker.main.Main'
+    }
+    dependsOn ('dependencies')
+}
 
 repositories {
     mavenCentral()
