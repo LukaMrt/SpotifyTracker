@@ -6,6 +6,7 @@ import com.lukamaret.spotifytracker.domain.model.spotify.Artist;
 import com.lukamaret.spotifytracker.domain.model.spotify.Playlist;
 import com.lukamaret.spotifytracker.domain.model.spotify.Track;
 import com.wrapper.spotify.SpotifyApi;
+import com.wrapper.spotify.model_objects.IPlaylistItem;
 import com.wrapper.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import com.wrapper.spotify.model_objects.miscellaneous.CurrentlyPlaying;
 import com.wrapper.spotify.model_objects.specification.ArtistSimplified;
@@ -43,9 +44,7 @@ public class SpotifyTrackerTask extends TimerTask {
                 return;
             }
 
-            Track track = buildTrack(currentTrack);
-            Playlist playlist = buildPlaylist(currentTrack);
-            trackService.registerListening(track, playlist);
+            trackService.registerListening(buildTrack(currentTrack), buildPlaylist(currentTrack));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -61,7 +60,8 @@ public class SpotifyTrackerTask extends TimerTask {
     }
 
     private Track buildTrack(CurrentlyPlaying currentTrack) throws Exception {
-        ArtistSimplified[] artists = spotifyApi.getTrack(currentTrack.getItem().getId())
+        IPlaylistItem item = currentTrack.getItem();
+        ArtistSimplified[] artists = spotifyApi.getTrack(item.getId())
                 .build()
                 .execute()
                 .getArtists();
@@ -74,10 +74,11 @@ public class SpotifyTrackerTask extends TimerTask {
                 )).toList();
 
         return new Track(
-                currentTrack.getItem().getExternalUrls().get("spotify"),
-                currentTrack.getItem().getUri(),
-                currentTrack.getItem().getName(),
-                trackArtists);
+                item.getExternalUrls().get("spotify"),
+                item.getUri(),
+                item.getName(),
+                trackArtists
+        );
     }
 
     private Playlist buildPlaylist(CurrentlyPlaying currentTrack) throws Exception {
