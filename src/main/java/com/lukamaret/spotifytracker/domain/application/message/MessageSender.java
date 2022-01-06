@@ -9,4 +9,6 @@ public interface MessageSender {
 
     void sendPrivateMessage(long userId, String message);
 
+    void sendMessage(long channelId, String message);
+
 }

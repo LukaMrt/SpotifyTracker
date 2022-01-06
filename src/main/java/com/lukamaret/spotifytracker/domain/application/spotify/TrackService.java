@@ -38,12 +38,11 @@ public class TrackService {
         track = trackRepository.save(track);
         listeningRepository.save(track, playlist);
 
-        messageSender.sendListening(Long.parseLong(discordConfiguration.getLogsChannel()), track, playlist);
-        messageSender.sendPrivateMessage(Long.parseLong(discordConfiguration.getGuardId()), "Récupération ok");
+        messageSender.sendListening(Long.parseLong(discordConfiguration.getTrackingChannel()), track, playlist);
     }
 
     public void noListening() {
-        messageSender.sendPrivateMessage(Long.parseLong(discordConfiguration.getGuardId()), "Récupération ok");
+        messageSender.sendMessage(Long.parseLong(discordConfiguration.getTrackingChannel()), "Aucune écoute en cours.");
     }
 
 }

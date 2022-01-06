@@ -48,13 +48,28 @@ public class GsonConfiguration implements SpotifyConfiguration, com.lukamaret.sp
     }
 
     @Override
-    public String getLogsChannel() {
-        return configuration.getDiscord().getLogs();
+    public String getTrackingChannel() {
+        return configuration.getDiscord().getTracking();
     }
 
     @Override
-    public String getGuardId() {
-        return configuration.getDiscord().getGuard();
+    public String getDailyChannel() {
+        return configuration.getDiscord().getDaily();
+    }
+
+    @Override
+    public String getWeeklyChannel() {
+        return configuration.getDiscord().getWeekly();
+    }
+
+    @Override
+    public String getMonthlyChannel() {
+        return configuration.getDiscord().getMonthly();
+    }
+
+    @Override
+    public String getYearlyChannel() {
+        return configuration.getDiscord().getYearly();
     }
 
     @Override
@@ -69,7 +84,7 @@ public class GsonConfiguration implements SpotifyConfiguration, com.lukamaret.sp
 
     @Override
     public void setAccessToken(String accessToken) {
-       configuration.getSpotify().getTokens().setAccessToken(accessToken);
+        configuration.getSpotify().getTokens().setAccessToken(accessToken);
     }
 
     @Override

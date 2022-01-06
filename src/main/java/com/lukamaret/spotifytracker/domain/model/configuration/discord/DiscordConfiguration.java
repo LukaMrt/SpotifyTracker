@@ -3,19 +3,34 @@ package com.lukamaret.spotifytracker.domain.model.configuration.discord;
 public class DiscordConfiguration {
 
     private String token = "token";
-    private String logs = "log_channel_id";
-    private String guard = "guard_bot_id";
+    private String tracking = "channel_id";
+    private String daily = "channel_id";
+    private String weekly = "channel_id";
+    private String monthly = "channel_id";
+    private String yearly = "channel_id";
 
     public String getToken() {
         return token;
     }
 
-    public String getLogs() {
-        return logs;
+    public String getTracking() {
+        return tracking;
     }
 
-    public String getGuard() {
-        return guard;
+    public String getDaily() {
+        return daily;
+    }
+
+    public String getWeekly() {
+        return weekly;
+    }
+
+    public String getMonthly() {
+        return monthly;
+    }
+
+    public String getYearly() {
+        return yearly;
     }
 
 }

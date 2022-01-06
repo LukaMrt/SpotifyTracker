@@ -4,8 +4,14 @@ public interface DiscordConfiguration {
 
     String getToken();
 
-    String getLogsChannel();
+    String getTrackingChannel();
 
-    String getGuardId();
+    String getDailyChannel();
+
+    String getWeeklyChannel();
+
+    String getMonthlyChannel();
+
+    String getYearlyChannel();
 
 }

@@ -11,8 +11,11 @@
   },
   "discord": {
     "token": "token",
-    "logs": "log_channel_id",
-    "guard": "guard_bot_id"
+    "tracking": "channel_id",
+    "daily": "channel_id",
+    "weekly": "channel_id",
+    "monthly": "channel_id",
+    "yearly": "channel_id"
   },
   "database": {
     "host": "localhost",

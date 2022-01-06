@@ -50,4 +50,9 @@ public class DiscordMessageSender implements MessageSender {
         discord.getUserById(userId).thenAccept(user -> user.sendMessage(message));
     }
 
+    @Override
+    public void sendMessage(long channelId, String message) {
+        discord.getTextChannelById(channelId).ifPresent(channel -> channel.sendMessage(message));
+    }
+
 }
