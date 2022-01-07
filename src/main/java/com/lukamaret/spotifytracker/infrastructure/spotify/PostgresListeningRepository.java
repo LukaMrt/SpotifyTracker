@@ -97,13 +97,7 @@ public class PostgresListeningRepository implements ListeningRepository {
 
             Connection connection = this.connection.getConnection();
 
-            String sql = """
-                    SELECT COUNT(DISTINCT id_artist)
-                    FROM listening
-                        JOIN track ON listening.id_track = track.id
-                        JOIN author ON track.id = author.id_track
-                    WHERE ? <= date AND date < ?
-                    """;
+            String sql = "SELECT COUNT(DISTINCT id_artist) FROM listening JOIN track ON listening.id_track = track.id JOIN author ON track.id = author.id_track WHERE ? <= date AND date < ?";
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.setTimestamp(1, java.sql.Timestamp.valueOf(start.atStartOfDay()));
             statement.setTimestamp(2, java.sql.Timestamp.valueOf(end.atStartOfDay()));
@@ -153,15 +147,7 @@ public class PostgresListeningRepository implements ListeningRepository {
 
             Connection connection = this.connection.getConnection();
 
-            String sql = """
-                    SELECT track.id, uri, url, track.name
-                    FROM listening
-                        JOIN track ON listening.id_track = track.id
-                    WHERE ? <= date AND date < ?
-                    GROUP BY track.id, uri, url, track.name
-                    ORDER BY COUNT(*) DESC
-                    LIMIT 5
-                    """;
+            String sql = "SELECT track.id, uri, url, track.name FROM listening JOIN track ON listening.id_track = track.id WHERE ? <= date AND date < ? GROUP BY track.id, uri, url, track.name ORDER BY COUNT(*) DESC LIMIT 5";
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.setTimestamp(1, java.sql.Timestamp.valueOf(start.atStartOfDay()));
             statement.setTimestamp(2, java.sql.Timestamp.valueOf(end.atStartOfDay()));
@@ -196,17 +182,7 @@ public class PostgresListeningRepository implements ListeningRepository {
 
             Connection connection = this.connection.getConnection();
 
-            String sql = """
-                    SELECT artist.id, artist.uri, artist.url, artist.name
-                    FROM listening
-                        JOIN track ON listening.id_track = track.id
-                        JOIN author ON track.id = author.id_track
-                        JOIN artist ON author.id_artist = artist.id
-                    WHERE ? <= date AND date < ?
-                    GROUP BY artist.id, artist.uri, artist.url, artist.name
-                    ORDER BY COUNT(*) DESC
-                    LIMIT 5
-                    """;
+            String sql = "SELECT artist.id, artist.uri, artist.url, artist.name FROM listening JOIN track ON listening.id_track = track.id JOIN author ON track.id = author.id_track JOIN artist ON author.id_artist = artist.id WHERE ? <= date AND date < ? GROUP BY artist.id, artist.uri, artist.url, artist.name ORDER BY COUNT(*) DESC LIMIT 5";
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.setTimestamp(1, java.sql.Timestamp.valueOf(start.atStartOfDay()));
             statement.setTimestamp(2, java.sql.Timestamp.valueOf(end.atStartOfDay()));
@@ -240,15 +216,7 @@ public class PostgresListeningRepository implements ListeningRepository {
 
             Connection connection = this.connection.getConnection();
 
-            String sql = """
-                    SELECT id, uri, url, playlist.name
-                    FROM listening
-                        JOIN playlist ON listening.id_playlist = playlist.id
-                    WHERE ? <= date AND date < ?
-                    GROUP BY id, uri, url, playlist.name
-                    ORDER BY COUNT(*) DESC
-                    LIMIT 5
-                    """;
+            String sql = "SELECT id, uri, url, playlist.name FROM listening JOIN playlist ON listening.id_playlist = playlist.id WHERE ? <= date AND date < ? GROUP BY id, uri, url, playlist.name ORDER BY COUNT(*) DESC LIMIT 5";
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.setTimestamp(1, java.sql.Timestamp.valueOf(start.atStartOfDay()));
             statement.setTimestamp(2, java.sql.Timestamp.valueOf(end.atStartOfDay()));

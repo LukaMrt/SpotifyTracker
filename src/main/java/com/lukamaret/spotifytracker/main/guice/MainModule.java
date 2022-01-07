@@ -2,11 +2,13 @@ package com.lukamaret.spotifytracker.main.guice;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
+import com.lukamaret.spotifytracker.domain.application.clean.ChannelCleaner;
 import com.lukamaret.spotifytracker.domain.application.configuration.DatabaseConfiguration;
 import com.lukamaret.spotifytracker.domain.application.configuration.DiscordConfiguration;
 import com.lukamaret.spotifytracker.domain.application.configuration.SpotifyConfiguration;
 import com.lukamaret.spotifytracker.domain.application.message.MessageSender;
 import com.lukamaret.spotifytracker.domain.application.spotify.*;
+import com.lukamaret.spotifytracker.infrastructure.clean.DiscordChannelCleaner;
 import com.lukamaret.spotifytracker.infrastructure.database.DatabaseConnection;
 import com.lukamaret.spotifytracker.infrastructure.database.DatabaseConnectionBuilder;
 import com.lukamaret.spotifytracker.infrastructure.spotify.PostgresArtistsRepository;
@@ -69,6 +71,7 @@ public class MainModule extends AbstractModule {
         bind(ArtistsRepository.class).to(PostgresArtistsRepository.class);
         bind(ListeningRepository.class).to(PostgresListeningRepository.class);
         bind(MessageSender.class).to(DiscordMessageSender.class);
+        bind(ChannelCleaner.class).to(DiscordChannelCleaner.class);
     }
 
 }
