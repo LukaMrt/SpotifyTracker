@@ -3,6 +3,7 @@ package com.lukamaret.spotifytracker.ui.listener;
 import com.google.inject.Injector;
 import com.lukamaret.spotifytracker.domain.model.commands.Command;
 import com.lukamaret.spotifytracker.ui.command.PingCommand;
+import com.lukamaret.spotifytracker.ui.command.ReportCommand;
 import com.lukamaret.spotifytracker.ui.command.StopCommand;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.listener.message.MessageCreateListener;
@@ -10,14 +11,15 @@ import org.javacord.api.listener.message.MessageCreateListener;
 import java.util.Arrays;
 import java.util.List;
 
-public class MessageReceivedListener implements MessageCreateListener {
+public class CommandListener implements MessageCreateListener {
 
     private final List<Command> commands;
 
-    public MessageReceivedListener(Injector injector) {
+    public CommandListener(Injector injector) {
         this.commands = List.of(
                 injector.getInstance(StopCommand.class),
-                injector.getInstance(PingCommand.class)
+                injector.getInstance(PingCommand.class),
+                injector.getInstance(ReportCommand.class)
         );
     }
 

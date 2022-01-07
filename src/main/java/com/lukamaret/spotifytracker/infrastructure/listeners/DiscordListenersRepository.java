@@ -2,7 +2,7 @@ package com.lukamaret.spotifytracker.infrastructure.listeners;
 
 import com.google.inject.Injector;
 import com.lukamaret.spotifytracker.domain.application.listeners.ListenersRepository;
-import com.lukamaret.spotifytracker.ui.listener.MessageReceivedListener;
+import com.lukamaret.spotifytracker.ui.listener.CommandListener;
 import org.javacord.api.DiscordApi;
 
 public class DiscordListenersRepository implements ListenersRepository {
@@ -17,7 +17,7 @@ public class DiscordListenersRepository implements ListenersRepository {
     public void registerListeners() {
 
         DiscordApi api = injector.getInstance(DiscordApi.class);
-        api.addListener(new MessageReceivedListener(injector));
+        api.addListener(new CommandListener(injector));
 
     }
 

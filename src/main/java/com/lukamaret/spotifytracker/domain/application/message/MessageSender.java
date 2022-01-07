@@ -1,6 +1,7 @@
 package com.lukamaret.spotifytracker.domain.application.message;
 
 import com.lukamaret.spotifytracker.domain.model.spotify.Playlist;
+import com.lukamaret.spotifytracker.domain.model.spotify.SpotifyReport;
 import com.lukamaret.spotifytracker.domain.model.spotify.Track;
 
 public interface MessageSender {
@@ -10,5 +11,7 @@ public interface MessageSender {
     void sendPrivateMessage(long userId, String message);
 
     void sendMessage(long channelId, String message);
+
+    void sendReport(String channelId, SpotifyReport report);
 
 }
