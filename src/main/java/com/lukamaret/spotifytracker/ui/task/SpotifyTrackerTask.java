@@ -82,6 +82,11 @@ public class SpotifyTrackerTask extends TimerTask {
     }
 
     private Playlist buildPlaylist(CurrentlyPlaying currentTrack) throws Exception {
+
+        if (currentTrack.getContext() == null) {
+            return new Playlist("free", "free", "Free");
+        }
+
         String playlistUri = currentTrack.getContext().getUri();
 
         String playlistName = Arrays.stream(spotifyApi.getListOfCurrentUsersPlaylists()
