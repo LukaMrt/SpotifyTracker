@@ -1,4 +1,4 @@
-package com.lukamaret.spotifytracker.domain.model.spotify;
+package com.lukamaret.spotifytracker.domain.model.spotify.report;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,9 +9,9 @@ public class SpotifyReportBuilder {
     public int tracksCount = 0;
     public int artistsCount = 0;
     public int playlistsCount = 0;
-    public List<Track> mostPlayedTracks = new ArrayList<>();
-    public List<Artist> mostPlayedArtists = new ArrayList<>();
-    public List<Playlist> mostPlayedPlaylists = new ArrayList<>();
+    public List<ReportTrack> mostPlayedTracks = new ArrayList<>();
+    public List<ReportArtist> mostPlayedArtists = new ArrayList<>();
+    public List<ReportPlaylist> mostPlayedPlaylists = new ArrayList<>();
 
     private SpotifyReportBuilder() {
     }
@@ -40,32 +40,32 @@ public class SpotifyReportBuilder {
         return this;
     }
 
-    public SpotifyReportBuilder withMostPlayedTracks(List<Track> mostPlayedTracks) {
+    public SpotifyReportBuilder withMostPlayedTracks(List<ReportTrack> mostPlayedTracks) {
         this.mostPlayedTracks = mostPlayedTracks;
         return this;
     }
 
-    public SpotifyReportBuilder withMostPlayedArtists(List<Artist> mostPlayedArtists) {
+    public SpotifyReportBuilder withMostPlayedArtists(List<ReportArtist> mostPlayedArtists) {
         this.mostPlayedArtists = mostPlayedArtists;
         return this;
     }
 
-    public SpotifyReportBuilder withMostPlayedPlaylists(List<Playlist> mostPlayedPlaylist) {
+    public SpotifyReportBuilder withMostPlayedPlaylists(List<ReportPlaylist> mostPlayedPlaylist) {
         this.mostPlayedPlaylists = mostPlayedPlaylist;
         return this;
     }
 
-    public SpotifyReportBuilder addMostPlayedTracks(Track track) {
+    public SpotifyReportBuilder addMostPlayedTracks(ReportTrack track) {
         this.mostPlayedTracks.add(track);
         return this;
     }
 
-    public SpotifyReportBuilder addMostPlayedArtists(Artist artist) {
+    public SpotifyReportBuilder addMostPlayedArtists(ReportArtist artist) {
         this.mostPlayedArtists.add(artist);
         return this;
     }
 
-    public SpotifyReportBuilder addMostPlayedTracksByArtist(Playlist playlist) {
+    public SpotifyReportBuilder addMostPlayedTracksByArtist(ReportPlaylist playlist) {
         this.mostPlayedPlaylists.add(playlist);
         return this;
     }

@@ -1,29 +1,23 @@
 plugins {
     id 'java'
-    id "com.github.johnrengelman.shadow" version "7.1.2"
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+    id 'application'
 }
 
 group 'com.lukamaret'
 version '0.1.0'
 
-sourceSets {
-    main {
-        java {
-            srcDir 'src/main/java'
-        }
-    }
+shadowJar {
+    archiveFileName = "SpotifyTracker.jar"
 }
 
 java {
-    sourceCompatibility = JavaVersion.toVersion('14')
-    targetCompatibility = JavaVersion.toVersion('14')
+    sourceCompatibility = JavaVersion.toVersion('17')
+    targetCompatibility = JavaVersion.toVersion('17')
 }
 
-jar {
-    manifest {
-        attributes 'Main-Class': 'com.lukamaret.spotifytracker.main.Main'
-    }
-    dependsOn ('dependencies')
+application {
+    mainClassName = 'com.lukamaret.spotifytracker.main.Main'
 }
 
 compileJava.options.encoding = 'UTF-8'

@@ -4,6 +4,9 @@ import com.lukamaret.spotifytracker.domain.application.spotify.ListeningReposito
 import com.lukamaret.spotifytracker.domain.model.spotify.Artist;
 import com.lukamaret.spotifytracker.domain.model.spotify.Playlist;
 import com.lukamaret.spotifytracker.domain.model.spotify.Track;
+import com.lukamaret.spotifytracker.domain.model.spotify.report.ReportArtist;
+import com.lukamaret.spotifytracker.domain.model.spotify.report.ReportPlaylist;
+import com.lukamaret.spotifytracker.domain.model.spotify.report.ReportTrack;
 import com.lukamaret.spotifytracker.infrastructure.database.DatabaseConnection;
 
 import javax.inject.Inject;
@@ -52,7 +55,10 @@ public class PostgresListeningRepository implements ListeningRepository {
             statement.setTimestamp(1, java.sql.Timestamp.valueOf(start.atStartOfDay()));
             statement.setTimestamp(2, java.sql.Timestamp.valueOf(end.atStartOfDay()));
 
-            minutes = statement.executeQuery().getInt(1);
+            ResultSet resultSet = statement.executeQuery();
+            resultSet.next();
+
+            minutes = resultSet.getInt(1);
             connection.close();
 
         } catch (SQLException e) {
@@ -77,7 +83,10 @@ public class PostgresListeningRepository implements ListeningRepository {
             statement.setTimestamp(1, java.sql.Timestamp.valueOf(start.atStartOfDay()));
             statement.setTimestamp(2, java.sql.Timestamp.valueOf(end.atStartOfDay()));
 
-            tracksCount = statement.executeQuery().getInt(1);
+            ResultSet result = statement.executeQuery();
+            result.next();
+
+            tracksCount = result.getInt(1);
             connection.close();
 
         } catch (SQLException e) {
@@ -102,7 +111,10 @@ public class PostgresListeningRepository implements ListeningRepository {
             statement.setTimestamp(1, java.sql.Timestamp.valueOf(start.atStartOfDay()));
             statement.setTimestamp(2, java.sql.Timestamp.valueOf(end.atStartOfDay()));
 
-            artistsCount = statement.executeQuery().getInt(1);
+            ResultSet result = statement.executeQuery();
+            result.next();
+
+            artistsCount = result.getInt(1);
             connection.close();
 
         } catch (SQLException e) {
@@ -127,7 +139,10 @@ public class PostgresListeningRepository implements ListeningRepository {
             statement.setTimestamp(1, java.sql.Timestamp.valueOf(start.atStartOfDay()));
             statement.setTimestamp(2, java.sql.Timestamp.valueOf(end.atStartOfDay()));
 
-            playlistsCount = statement.executeQuery().getInt(1);
+            ResultSet result = statement.executeQuery();
+            result.next();
+
+            playlistsCount = result.getInt(1);
             connection.close();
 
         } catch (SQLException e) {
@@ -139,15 +154,15 @@ public class PostgresListeningRepository implements ListeningRepository {
     }
 
     @Override
-    public List<Track> getMostPlayedTracks(LocalDate start, LocalDate end) {
+    public List<ReportTrack> getMostPlayedTracks(LocalDate start, LocalDate end) {
 
-        List<Track> tracks = new ArrayList<>();
+        List<ReportTrack> tracks = new ArrayList<>();
 
         try {
 
             Connection connection = this.connection.getConnection();
 
-            String sql = "SELECT track.id, uri, url, track.name FROM listening JOIN track ON listening.id_track = track.id WHERE ? <= date AND date < ? GROUP BY track.id, uri, url, track.name ORDER BY COUNT(*) DESC LIMIT 5";
+            String sql = "SELECT track.id, uri, url, track.name, COUNT(*) / 2 AS time FROM listening JOIN track ON listening.id_track = track.id WHERE ? <= date AND date < ? GROUP BY track.id, uri, url, track.name ORDER BY COUNT(*) DESC LIMIT 5";
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.setTimestamp(1, java.sql.Timestamp.valueOf(start.atStartOfDay()));
             statement.setTimestamp(2, java.sql.Timestamp.valueOf(end.atStartOfDay()));
@@ -161,7 +176,7 @@ public class PostgresListeningRepository implements ListeningRepository {
                         resultSet.getString("name"),
                         new ArrayList<>()
                 );
-                tracks.add(track);
+                tracks.add(new ReportTrack(resultSet.getInt("time"), track));
             }
 
             connection.close();
@@ -174,15 +189,15 @@ public class PostgresListeningRepository implements ListeningRepository {
     }
 
     @Override
-    public List<Artist> getMostPlayedArtists(LocalDate start, LocalDate end) {
+    public List<ReportArtist> getMostPlayedArtists(LocalDate start, LocalDate end) {
 
-        List<Artist> artists = new ArrayList<>();
+        List<ReportArtist> artists = new ArrayList<>();
 
         try {
 
             Connection connection = this.connection.getConnection();
 
-            String sql = "SELECT artist.id, artist.uri, artist.url, artist.name FROM listening JOIN track ON listening.id_track = track.id JOIN author ON track.id = author.id_track JOIN artist ON author.id_artist = artist.id WHERE ? <= date AND date < ? GROUP BY artist.id, artist.uri, artist.url, artist.name ORDER BY COUNT(*) DESC LIMIT 5";
+            String sql = "SELECT artist.id, artist.uri, artist.url, artist.name, COUNT(*) / 2 AS time FROM listening JOIN track ON listening.id_track = track.id JOIN author ON track.id = author.id_track JOIN artist ON author.id_artist = artist.id WHERE ? <= date AND date < ? GROUP BY artist.id, artist.uri, artist.url, artist.name ORDER BY COUNT(*) DESC LIMIT 5";
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.setTimestamp(1, java.sql.Timestamp.valueOf(start.atStartOfDay()));
             statement.setTimestamp(2, java.sql.Timestamp.valueOf(end.atStartOfDay()));
@@ -195,7 +210,7 @@ public class PostgresListeningRepository implements ListeningRepository {
                         resultSet.getString("uri"),
                         resultSet.getString("name")
                 );
-                artists.add(artist);
+                artists.add(new ReportArtist(resultSet.getInt("time"), artist));
             }
 
             connection.close();
@@ -208,15 +223,15 @@ public class PostgresListeningRepository implements ListeningRepository {
     }
 
     @Override
-    public List<Playlist> getMostPlayedPlaylists(LocalDate start, LocalDate end) {
+    public List<ReportPlaylist> getMostPlayedPlaylists(LocalDate start, LocalDate end) {
 
-        List<Playlist> playlists = new ArrayList<>();
+        List<ReportPlaylist> playlists = new ArrayList<>();
 
         try {
 
             Connection connection = this.connection.getConnection();
 
-            String sql = "SELECT id, uri, url, playlist.name FROM listening JOIN playlist ON listening.id_playlist = playlist.id WHERE ? <= date AND date < ? GROUP BY id, uri, url, playlist.name ORDER BY COUNT(*) DESC LIMIT 5";
+            String sql = "SELECT id, uri, url, playlist.name, COUNT(*) / 2 AS time FROM listening JOIN playlist ON listening.id_playlist = playlist.id WHERE ? <= date AND date < ? GROUP BY id, uri, url, playlist.name ORDER BY COUNT(*) DESC LIMIT 5";
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.setTimestamp(1, java.sql.Timestamp.valueOf(start.atStartOfDay()));
             statement.setTimestamp(2, java.sql.Timestamp.valueOf(end.atStartOfDay()));
@@ -229,7 +244,7 @@ public class PostgresListeningRepository implements ListeningRepository {
                         resultSet.getString("uri"),
                         resultSet.getString("name")
                 );
-                playlists.add(playlist);
+                playlists.add(new ReportPlaylist(resultSet.getInt("time"), playlist));
             }
 
             connection.close();

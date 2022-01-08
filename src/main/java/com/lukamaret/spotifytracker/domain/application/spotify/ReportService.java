@@ -2,14 +2,16 @@ package com.lukamaret.spotifytracker.domain.application.spotify;
 
 import com.lukamaret.spotifytracker.domain.application.configuration.DiscordConfiguration;
 import com.lukamaret.spotifytracker.domain.application.message.MessageSender;
-import com.lukamaret.spotifytracker.domain.model.spotify.*;
+import com.lukamaret.spotifytracker.domain.model.spotify.report.*;
 
 import javax.inject.Inject;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.TextStyle;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
+import java.util.Locale;
 
 public class ReportService {
 
@@ -58,7 +60,15 @@ public class ReportService {
         SpotifyReport report = buildReport(yesterday, today);
 
         String dailyChannel = discordConfiguration.getDailyChannel();
-        messageSender.sendReport(dailyChannel, report);
+        String title = "Spotify report : "
+                + yesterday.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.FRANCE)
+                + " "
+                + String.format("%02d", yesterday.getDayOfMonth())
+                + "/"
+                + String.format("%02d", yesterday.getMonthValue())
+                + "/"
+                + today.getYear();
+        messageSender.sendReport(dailyChannel, report, title);
     }
 
     private void sendWeeklyReport() {
@@ -66,9 +76,24 @@ public class ReportService {
         LocalDate currentWeek = LocalDate.now().with(TemporalAdjusters.previous(DayOfWeek.MONDAY));
         LocalDate nextWeek = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.MONDAY));
         SpotifyReport report = buildReport(currentWeek, nextWeek);
+        nextWeek = nextWeek.minusDays(1);
 
         String dailyChannel = discordConfiguration.getWeeklyChannel();
-        messageSender.sendReport(dailyChannel, report);
+        String title = "Spotify report : "
+                + "semaine du lundi "
+                + String.format("%02d", currentWeek.getDayOfMonth())
+                + "/"
+                + String.format("%02d", currentWeek.getMonthValue())
+                + "/"
+                + currentWeek.getYear()
+                + " au dimanche "
+                + String.format("%02d", nextWeek.getDayOfMonth())
+                + "/"
+                + String.format("%02d", nextWeek.getMonthValue())
+                + "/"
+                + nextWeek.getYear();
+
+        messageSender.sendReport(dailyChannel, report, title);
     }
 
     private void sendMonthlyReport() {
@@ -78,7 +103,12 @@ public class ReportService {
         SpotifyReport report = buildReport(currentMonth, nextMonth);
 
         String dailyChannel = discordConfiguration.getMonthlyChannel();
-        messageSender.sendReport(dailyChannel, report);
+        String title = "Spotify report : mois de "
+                + currentMonth.getMonth().getDisplayName(TextStyle.FULL, Locale.FRANCE)
+                + " "
+                + currentMonth.getYear();
+
+        messageSender.sendReport(dailyChannel, report, title);
     }
 
     private void sendYearlyReport() {
@@ -88,7 +118,9 @@ public class ReportService {
         SpotifyReport report = buildReport(currentYear, nextYear);
 
         String dailyChannel = discordConfiguration.getYearlyChannel();
-        messageSender.sendReport(dailyChannel, report);
+        String title = "Spotify report : année " + currentYear.getYear();
+
+        messageSender.sendReport(dailyChannel, report, title);
     }
 
     private SpotifyReport buildReport(LocalDate start, LocalDate end) {
@@ -98,9 +130,9 @@ public class ReportService {
         int artistsCount = listeningRepository.getArtistsCount(start, end);
         int playlistsCount = listeningRepository.getPlaylistsCount(start, end);
 
-        List<Track> mostPlayedTracks = listeningRepository.getMostPlayedTracks(start, end);
-        List<Artist> mostPlayedArtists = listeningRepository.getMostPlayedArtists(start, end);
-        List<Playlist> mostPlayedPlaylists = listeningRepository.getMostPlayedPlaylists(start, end);
+        List<ReportTrack> mostPlayedTracks = listeningRepository.getMostPlayedTracks(start, end);
+        List<ReportArtist> mostPlayedArtists = listeningRepository.getMostPlayedArtists(start, end);
+        List<ReportPlaylist> mostPlayedPlaylists = listeningRepository.getMostPlayedPlaylists(start, end);
 
         return SpotifyReportBuilder.aSpotifyReport()
                 .withListeningMinutes(listeningMinutes)

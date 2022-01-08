@@ -1,8 +1,10 @@
 package com.lukamaret.spotifytracker.domain.application.spotify;
 
-import com.lukamaret.spotifytracker.domain.model.spotify.Artist;
 import com.lukamaret.spotifytracker.domain.model.spotify.Playlist;
 import com.lukamaret.spotifytracker.domain.model.spotify.Track;
+import com.lukamaret.spotifytracker.domain.model.spotify.report.ReportArtist;
+import com.lukamaret.spotifytracker.domain.model.spotify.report.ReportPlaylist;
+import com.lukamaret.spotifytracker.domain.model.spotify.report.ReportTrack;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -19,10 +21,10 @@ public interface ListeningRepository {
 
     int getPlaylistsCount(LocalDate start, LocalDate end);
 
-    List<Track> getMostPlayedTracks(LocalDate start, LocalDate end);
+    List<ReportTrack> getMostPlayedTracks(LocalDate start, LocalDate end);
 
-    List<Artist> getMostPlayedArtists(LocalDate start, LocalDate end);
+    List<ReportArtist> getMostPlayedArtists(LocalDate start, LocalDate end);
 
-    List<Playlist> getMostPlayedPlaylists(LocalDate start, LocalDate end);
+    List<ReportPlaylist> getMostPlayedPlaylists(LocalDate start, LocalDate end);
 
 }
