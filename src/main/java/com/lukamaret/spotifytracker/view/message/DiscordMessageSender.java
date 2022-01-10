@@ -115,7 +115,7 @@ public class DiscordMessageSender implements MessageSender {
     private String formatMinutes(int listeningMinutes) {
 
         int days = listeningMinutes / (24 * 60);
-        int hours = listeningMinutes / 60;
+        int hours = listeningMinutes % (24 * 60) / 60;
         int minutes = listeningMinutes % 60;
 
         StringBuilder sb = new StringBuilder();
