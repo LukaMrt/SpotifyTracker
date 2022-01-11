@@ -23,7 +23,7 @@ public class DefaultTasksRepository implements TasksRepository {
 
         LocalDateTime now = LocalDateTime.now();
 
-        LocalDateTime next8Hours = now.withHour(8);
+        LocalDateTime next8Hours = now.withHour(8).withMinute(0);
 
         if (now.getHour() >= 8) {
             next8Hours = next8Hours.plusDays(1);
