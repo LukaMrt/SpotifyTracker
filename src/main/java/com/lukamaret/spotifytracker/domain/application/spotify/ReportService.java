@@ -9,7 +9,6 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.TextStyle;
-import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Locale;
 
@@ -56,7 +55,7 @@ public class ReportService {
     private void sendDailyReport() {
 
         LocalDate today = LocalDate.now();
-        LocalDate yesterday = today.minusDays(1);
+        LocalDate yesterday = LocalDate.now().minusDays(1);
         SpotifyReport report = buildReport(yesterday, today);
 
         String dailyChannel = discordConfiguration.getDailyChannel();
@@ -73,52 +72,51 @@ public class ReportService {
 
     private void sendWeeklyReport() {
 
-        LocalDate currentWeek = LocalDate.now().with(TemporalAdjusters.previous(DayOfWeek.MONDAY));
-        LocalDate nextWeek = LocalDate.now().with(TemporalAdjusters.next(DayOfWeek.MONDAY));
-        SpotifyReport report = buildReport(currentWeek, nextWeek);
-        nextWeek = nextWeek.minusDays(1);
+        LocalDate lastWeek = LocalDate.now().minusWeeks(1);
+        LocalDate today = LocalDate.now();
+        SpotifyReport report = buildReport(lastWeek, today);
 
         String dailyChannel = discordConfiguration.getWeeklyChannel();
         String title = "Spotify report : "
                 + "semaine du lundi "
-                + String.format("%02d", currentWeek.getDayOfMonth())
+                + String.format("%02d", lastWeek.getDayOfMonth())
                 + "/"
-                + String.format("%02d", currentWeek.getMonthValue())
+                + String.format("%02d", lastWeek.getMonthValue())
                 + "/"
-                + currentWeek.getYear()
+                + lastWeek.getYear()
                 + " au dimanche "
-                + String.format("%02d", nextWeek.getDayOfMonth())
+                + String.format("%02d", today.getDayOfMonth())
                 + "/"
-                + String.format("%02d", nextWeek.getMonthValue())
+                + String.format("%02d", today.getMonthValue())
                 + "/"
-                + nextWeek.getYear();
+                + today.getYear();
 
         messageSender.sendReport(dailyChannel, report, title);
     }
 
     private void sendMonthlyReport() {
 
-        LocalDate currentMonth = LocalDate.now().withDayOfMonth(1);
-        LocalDate nextMonth = LocalDate.now().plusMonths(1).withDayOfMonth(1);
-        SpotifyReport report = buildReport(currentMonth, nextMonth);
+        LocalDate lastMonth = LocalDate.now().minusMonths(1);
+        LocalDate today = LocalDate.now();
+        SpotifyReport report = buildReport(lastMonth, today);
 
         String dailyChannel = discordConfiguration.getMonthlyChannel();
         String title = "Spotify report : mois de "
-                + currentMonth.getMonth().getDisplayName(TextStyle.FULL, Locale.FRANCE)
+                + lastMonth.getMonth().getDisplayName(TextStyle.FULL, Locale.FRANCE)
                 + " "
-                + currentMonth.getYear();
+                + lastMonth.getYear();
 
         messageSender.sendReport(dailyChannel, report, title);
     }
 
     private void sendYearlyReport() {
 
-        LocalDate currentYear = LocalDate.now().withDayOfYear(1);
-        LocalDate nextYear = LocalDate.now().plusYears(1).withDayOfYear(1);
-        SpotifyReport report = buildReport(currentYear, nextYear);
+        LocalDate lastYear = LocalDate.now().minusYears(1);
+        LocalDate today = LocalDate.now();
+        SpotifyReport report = buildReport(lastYear, today);
 
         String dailyChannel = discordConfiguration.getYearlyChannel();
-        String title = "Spotify report : année " + currentYear.getYear();
+        String title = "Spotify report : année " + lastYear.getYear();
 
         messageSender.sendReport(dailyChannel, report, title);
     }
