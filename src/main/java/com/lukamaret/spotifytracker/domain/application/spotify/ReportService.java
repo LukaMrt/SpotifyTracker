@@ -9,6 +9,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.TextStyle;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Locale;
 
@@ -54,8 +55,8 @@ public class ReportService {
 
     private void sendDailyReport() {
 
-        LocalDate today = LocalDate.now();
         LocalDate yesterday = LocalDate.now().minusDays(1);
+        LocalDate today = LocalDate.now();
         SpotifyReport report = buildReport(yesterday, today);
 
         String dailyChannel = discordConfiguration.getDailyChannel();
@@ -72,8 +73,8 @@ public class ReportService {
 
     private void sendWeeklyReport() {
 
-        LocalDate lastWeek = LocalDate.now().minusWeeks(1);
-        LocalDate today = LocalDate.now();
+        LocalDate lastWeek = LocalDate.now().minusWeeks(1).plusDays(1).with(TemporalAdjusters.previous(DayOfWeek.MONDAY));
+        LocalDate today = LocalDate.now().plusDays(1).with(TemporalAdjusters.previous(DayOfWeek.MONDAY));
         SpotifyReport report = buildReport(lastWeek, today);
 
         String dailyChannel = discordConfiguration.getWeeklyChannel();
@@ -96,8 +97,8 @@ public class ReportService {
 
     private void sendMonthlyReport() {
 
-        LocalDate lastMonth = LocalDate.now().minusMonths(1);
-        LocalDate today = LocalDate.now();
+        LocalDate lastMonth = LocalDate.now().minusMonths(1).withDayOfMonth(1);
+        LocalDate today = LocalDate.now().withDayOfMonth(1);
         SpotifyReport report = buildReport(lastMonth, today);
 
         String dailyChannel = discordConfiguration.getMonthlyChannel();
@@ -111,8 +112,8 @@ public class ReportService {
 
     private void sendYearlyReport() {
 
-        LocalDate lastYear = LocalDate.now().minusYears(1);
-        LocalDate today = LocalDate.now();
+        LocalDate lastYear = LocalDate.now().minusYears(1).withDayOfYear(1);
+        LocalDate today = LocalDate.now().withDayOfYear(1);
         SpotifyReport report = buildReport(lastYear, today);
 
         String dailyChannel = discordConfiguration.getYearlyChannel();
