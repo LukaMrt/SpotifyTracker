@@ -39,7 +39,7 @@ public class SpotifyTrackerTask extends TimerTask {
                     .build()
                     .execute();
 
-            if (currentTrack == null || !currentTrack.getIs_playing()) {
+            if (currentTrack == null || currentTrack.getItem() == null || !currentTrack.getIs_playing()) {
                 trackService.noListening();
                 return;
             }
