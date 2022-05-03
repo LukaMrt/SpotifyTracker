@@ -39,7 +39,7 @@ public class SpotifyTrackerTask extends TimerTask {
                     .build()
                     .execute();
 
-            if (currentTrack == null || currentTrack.getItem() == null || !currentTrack.getIs_playing()) {
+            if (currentTrack == null || currentTrack.getItem() == null || !currentTrack.getIs_playing() || spotifyApi.getTrack(currentTrack.getItem().getId()) == null) {
                 trackService.noListening();
                 return;
             }
@@ -48,6 +48,7 @@ public class SpotifyTrackerTask extends TimerTask {
 
         } catch (Exception e) {
             e.printStackTrace();
+            trackService.noListening();
         }
 
     }
