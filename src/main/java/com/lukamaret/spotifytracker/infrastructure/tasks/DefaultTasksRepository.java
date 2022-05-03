@@ -29,9 +29,7 @@ public class DefaultTasksRepository implements TasksRepository {
         }
 
         long delay = Duration.between(now, next8Hours).toMillis();
-
-        System.out.println("Next 8 hours: " + next8Hours);
-
+        
         new Timer().schedule(injector.getInstance(SpotifyTrackerTask.class), 0, 30 * 1_000);
         new Timer().schedule(injector.getInstance(PeriodsReportTask.class), delay, 24 * 60 * 60 * 1_000);
     }
