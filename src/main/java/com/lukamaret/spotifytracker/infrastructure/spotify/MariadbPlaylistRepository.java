@@ -19,6 +19,7 @@ public class MariadbPlaylistRepository implements PlaylistRepository {
     public Playlist save(Playlist playlist) {
 
         try {
+
             Connection connection = this.connection.getConnection();
 
             PreparedStatement statement = connection.prepareStatement("SELECT * FROM Playlist WHERE uri = ?");

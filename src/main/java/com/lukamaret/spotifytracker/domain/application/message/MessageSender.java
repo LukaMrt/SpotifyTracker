@@ -6,11 +6,9 @@ import com.lukamaret.spotifytracker.domain.model.spotify.Track;
 
 public interface MessageSender {
 
-    void sendListening(long channelId, Track track, Playlist playlist);
+    void sendListening(String channelId, Track track, Playlist playlist);
 
-    void sendPrivateMessage(long userId, String message);
-
-    void sendMessage(long channelId, String message);
+    void sendMessage(String channelId, String message);
 
     void sendReport(String channelId, SpotifyReport report, String title);
 

@@ -19,14 +19,16 @@ import java.util.TimerTask;
 
 public class SpotifyTrackerTask extends TimerTask {
 
-    @Inject
-    private SpotifyApi spotifyApi;
+    private final SpotifyApi spotifyApi;
+    private final SpotifyConfiguration spotifyConfiguration;
+    private final TrackService trackService;
 
     @Inject
-    private SpotifyConfiguration spotifyConfiguration;
-
-    @Inject
-    private TrackService trackService;
+    public SpotifyTrackerTask(SpotifyApi spotifyApi, SpotifyConfiguration spotifyConfiguration, TrackService trackService) {
+        this.spotifyApi = spotifyApi;
+        this.spotifyConfiguration = spotifyConfiguration;
+        this.trackService = trackService;
+    }
 
     @Override
     public void run() {

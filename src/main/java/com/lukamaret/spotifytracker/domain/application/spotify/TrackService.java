@@ -30,6 +30,7 @@ public class TrackService {
     private DiscordConfiguration discordConfiguration;
 
     public void registerListening(Track track, Playlist playlist) {
+
         playlist = playlistRepository.save(playlist);
         List<Artist> artists = track.artists.stream()
                 .map(artist -> artistsRepository.save(artist))
@@ -38,11 +39,11 @@ public class TrackService {
         track = trackRepository.save(track);
         listeningRepository.save(track, playlist);
 
-        messageSender.sendListening(Long.parseLong(discordConfiguration.getTrackingChannel()), track, playlist);
+        messageSender.sendListening(discordConfiguration.getTrackingChannel(), track, playlist);
     }
 
     public void noListening() {
-        messageSender.sendMessage(Long.parseLong(discordConfiguration.getTrackingChannel()), "Aucune écoute en cours.");
+        messageSender.sendMessage(discordConfiguration.getTrackingChannel(), "Aucune écoute en cours.");
     }
 
 }

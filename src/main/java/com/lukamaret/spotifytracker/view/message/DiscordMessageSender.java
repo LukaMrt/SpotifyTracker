@@ -19,7 +19,7 @@ public class DiscordMessageSender implements MessageSender {
     private DiscordApi discord;
 
     @Override
-    public void sendListening(long channelId, Track track, Playlist playlist) {
+    public void sendListening(String channelId, Track track, Playlist playlist) {
 
         StringBuilder artists = new StringBuilder();
 
@@ -50,12 +50,7 @@ public class DiscordMessageSender implements MessageSender {
     }
 
     @Override
-    public void sendPrivateMessage(long userId, String message) {
-        discord.getUserById(userId).thenAccept(user -> user.sendMessage(message));
-    }
-
-    @Override
-    public void sendMessage(long channelId, String message) {
+    public void sendMessage(String channelId, String message) {
         discord.getTextChannelById(channelId).ifPresent(channel -> this.sendMessageToDelete(channel, message));
     }
 
