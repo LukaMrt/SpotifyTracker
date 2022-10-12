@@ -11,6 +11,11 @@ import java.util.Timer;
 
 public class DefaultTasksRepository implements TasksRepository {
 
+    public static final int THIRTY_SECONDS = 30 * 1_000;
+    public static final int ONE_DAY = 24 * 60 * 60 * 1_000;
+    public static final int REPORT_HOUR = 8;
+
+
     private final Injector injector;
 
     public DefaultTasksRepository(Injector injector) {
@@ -22,16 +27,16 @@ public class DefaultTasksRepository implements TasksRepository {
 
         LocalDateTime now = LocalDateTime.now();
 
-        LocalDateTime next8Hours = now.withHour(8).withMinute(0).withSecond(0);
+        LocalDateTime next8Hours = now.withHour(REPORT_HOUR).withMinute(0).withSecond(0);
 
-        if (now.getHour() >= 8) {
+        if (now.getHour() >= REPORT_HOUR) {
             next8Hours = next8Hours.plusDays(1);
         }
 
         long delay = Duration.between(now, next8Hours).toMillis();
 
-        new Timer().schedule(injector.getInstance(SpotifyTrackerTask.class), 0, 30 * 1_000);
-        new Timer().schedule(injector.getInstance(PeriodsReportTask.class), delay, 24 * 60 * 60 * 1_000);
+        new Timer().schedule(injector.getInstance(SpotifyTrackerTask.class), 0, THIRTY_SECONDS);
+        new Timer().schedule(injector.getInstance(PeriodsReportTask.class), delay, ONE_DAY);
     }
 
 }
