@@ -5,12 +5,12 @@ import com.lukamaret.spotifytracker.domain.application.spotify.TrackService;
 import com.lukamaret.spotifytracker.domain.model.spotify.Artist;
 import com.lukamaret.spotifytracker.domain.model.spotify.Playlist;
 import com.lukamaret.spotifytracker.domain.model.spotify.Track;
-import com.wrapper.spotify.SpotifyApi;
-import com.wrapper.spotify.model_objects.IPlaylistItem;
-import com.wrapper.spotify.model_objects.credentials.AuthorizationCodeCredentials;
-import com.wrapper.spotify.model_objects.miscellaneous.CurrentlyPlaying;
-import com.wrapper.spotify.model_objects.specification.ArtistSimplified;
-import com.wrapper.spotify.model_objects.specification.PlaylistSimplified;
+import se.michaelthelin.spotify.SpotifyApi;
+import se.michaelthelin.spotify.model_objects.IPlaylistItem;
+import se.michaelthelin.spotify.model_objects.credentials.AuthorizationCodeCredentials;
+import se.michaelthelin.spotify.model_objects.miscellaneous.CurrentlyPlaying;
+import se.michaelthelin.spotify.model_objects.specification.ArtistSimplified;
+import se.michaelthelin.spotify.model_objects.specification.PlaylistSimplified;
 
 import javax.inject.Inject;
 import java.util.Arrays;

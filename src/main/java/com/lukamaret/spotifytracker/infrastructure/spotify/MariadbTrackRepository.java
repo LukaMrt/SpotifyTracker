@@ -11,7 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class PostgresTrackRepository implements TrackRepository {
+public class MariadbTrackRepository implements TrackRepository {
 
     @Inject
     private DatabaseConnection connection;
@@ -22,12 +22,12 @@ public class PostgresTrackRepository implements TrackRepository {
         try {
             Connection connection = this.connection.getConnection();
 
-            PreparedStatement statement = connection.prepareStatement("SELECT * FROM track WHERE name = ?");
+            PreparedStatement statement = connection.prepareStatement("SELECT * FROM Track WHERE name = ?");
             statement.setString(1, track.name);
             ResultSet result = statement.executeQuery();
 
             if (!result.next()) {
-                statement = connection.prepareStatement("INSERT INTO track (name, uri, url) VALUES (?, ?, ?)");
+                statement = connection.prepareStatement("INSERT INTO Track (name, uri, url) VALUES (?, ?, ?)");
                 statement.setString(1, track.name);
                 statement.setString(2, track.uri);
                 statement.setString(3, track.url);
@@ -35,8 +35,7 @@ public class PostgresTrackRepository implements TrackRepository {
             }
 
 
-
-            statement = connection.prepareStatement("SELECT * FROM track WHERE name = ?");
+            statement = connection.prepareStatement("SELECT * FROM Track WHERE name = ?");
             statement.setString(1, track.name);
             result = statement.executeQuery();
             result.next();
@@ -56,12 +55,12 @@ public class PostgresTrackRepository implements TrackRepository {
 
         for (Artist artist : track.artists) {
 
-            PreparedStatement statement = connection.prepareStatement("SELECT * FROM author WHERE id_track = ? AND id_artist = ?");
+            PreparedStatement statement = connection.prepareStatement("SELECT * FROM Author WHERE id_track = ? AND id_artist = ?");
             statement.setInt(1, track.id);
             statement.setInt(2, artist.id);
 
             if (!statement.executeQuery().next()) {
-                statement = connection.prepareStatement("INSERT INTO author (id_track, id_artist) VALUES (?, ?)");
+                statement = connection.prepareStatement("INSERT INTO Author (id_track, id_artist) VALUES (?, ?)");
                 statement.setInt(1, track.id);
                 statement.setInt(2, artist.id);
                 statement.execute();

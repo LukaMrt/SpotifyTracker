@@ -10,7 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class PostgresPlaylistRepository implements PlaylistRepository {
+public class MariadbPlaylistRepository implements PlaylistRepository {
 
     @Inject
     private DatabaseConnection connection;
@@ -21,19 +21,19 @@ public class PostgresPlaylistRepository implements PlaylistRepository {
         try {
             Connection connection = this.connection.getConnection();
 
-            PreparedStatement statement = connection.prepareStatement("SELECT * FROM playlist WHERE uri = ?");
+            PreparedStatement statement = connection.prepareStatement("SELECT * FROM Playlist WHERE uri = ?");
             statement.setString(1, playlist.uri);
             ResultSet result = statement.executeQuery();
 
             if (!result.next()) {
-                statement = connection.prepareStatement("INSERT INTO playlist (name, uri, url) VALUES (?, ?, ?)");
+                statement = connection.prepareStatement("INSERT INTO Playlist (name, uri, url) VALUES (?, ?, ?)");
                 statement.setString(1, playlist.name);
                 statement.setString(2, playlist.uri);
                 statement.setString(3, playlist.url);
                 statement.execute();
             }
 
-            statement = connection.prepareStatement("SELECT * FROM playlist WHERE uri = ?");
+            statement = connection.prepareStatement("SELECT * FROM Playlist WHERE uri = ?");
             statement.setString(1, playlist.uri);
             result = statement.executeQuery();
             result.next();

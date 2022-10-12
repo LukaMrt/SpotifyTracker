@@ -10,7 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class PostgresArtistsRepository implements ArtistsRepository {
+public class MariadbArtistsRepository implements ArtistsRepository {
 
     @Inject
     private DatabaseConnection connection;
@@ -21,19 +21,19 @@ public class PostgresArtistsRepository implements ArtistsRepository {
         try {
             Connection connection = this.connection.getConnection();
 
-            PreparedStatement statement = connection.prepareStatement("SELECT * FROM artist WHERE name = ?");
+            PreparedStatement statement = connection.prepareStatement("SELECT * FROM Artist WHERE name = ?");
             statement.setString(1, artist.name);
             ResultSet result = statement.executeQuery();
 
             if (!result.next()) {
-                statement = connection.prepareStatement("INSERT INTO artist (name, uri, url) VALUES (?, ?, ?)");
+                statement = connection.prepareStatement("INSERT INTO Artist (name, uri, url) VALUES (?, ?, ?)");
                 statement.setString(1, artist.name);
                 statement.setString(2, artist.uri);
                 statement.setString(3, artist.url);
                 statement.execute();
             }
 
-            statement = connection.prepareStatement("SELECT * FROM artist WHERE name = ?");
+            statement = connection.prepareStatement("SELECT * FROM Artist WHERE name = ?");
             statement.setString(1, artist.name);
             result = statement.executeQuery();
             result.next();

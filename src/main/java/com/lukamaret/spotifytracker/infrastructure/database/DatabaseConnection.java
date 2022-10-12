@@ -11,20 +11,16 @@ public class DatabaseConnection {
 
     public DatabaseConnection(DatabaseConnectionBuilder builder) {
         this.dataSource = new HikariDataSource();
-        setUpDataSource(builder);
-    }
-
-    private void setUpDataSource(DatabaseConnectionBuilder builder) {
-        dataSource.setJdbcUrl("jdbc:postgresql://" + builder.getHost() + ":" + builder.getPort() + "/" + builder.getDatabase());
-        dataSource.setUsername(builder.getUser());
-        dataSource.setPassword(builder.getPassword());
-        dataSource.addDataSourceProperty("autoReconnect", true);
-        dataSource.addDataSourceProperty("tcpKeepAlive", true);
-        dataSource.addDataSourceProperty("serverTimezone", "Europe/Paris");
-        dataSource.addDataSourceProperty("characterEncoding", "utf8");
-        dataSource.addDataSourceProperty("useUnicode", "true");
-        dataSource.setMaximumPoolSize(15);
-        dataSource.setMinimumIdle(0);
+        this.dataSource.setJdbcUrl("jdbc:mariadb://" + builder.getHost() + ":" + builder.getPort() + "/" + builder.getDatabase());
+        this.dataSource.setUsername(builder.getUser());
+        this.dataSource.setPassword(builder.getPassword());
+        this.dataSource.addDataSourceProperty("autoReconnect", true);
+        this.dataSource.addDataSourceProperty("tcpKeepAlive", true);
+        this.dataSource.addDataSourceProperty("serverTimezone", "Europe/Paris");
+        this.dataSource.addDataSourceProperty("characterEncoding", "utf8");
+        this.dataSource.addDataSourceProperty("useUnicode", "true");
+        this.dataSource.setMaximumPoolSize(5);
+        this.dataSource.setMinimumIdle(0);
     }
 
     public Connection getConnection() {

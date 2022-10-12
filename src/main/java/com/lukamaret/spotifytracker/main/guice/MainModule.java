@@ -11,14 +11,14 @@ import com.lukamaret.spotifytracker.domain.application.spotify.*;
 import com.lukamaret.spotifytracker.infrastructure.clean.DiscordChannelCleaner;
 import com.lukamaret.spotifytracker.infrastructure.database.DatabaseConnection;
 import com.lukamaret.spotifytracker.infrastructure.database.DatabaseConnectionBuilder;
-import com.lukamaret.spotifytracker.infrastructure.spotify.PostgresArtistsRepository;
-import com.lukamaret.spotifytracker.infrastructure.spotify.PostgresListeningRepository;
-import com.lukamaret.spotifytracker.infrastructure.spotify.PostgresPlaylistRepository;
-import com.lukamaret.spotifytracker.infrastructure.spotify.PostgresTrackRepository;
+import com.lukamaret.spotifytracker.infrastructure.spotify.MariadbArtistsRepository;
+import com.lukamaret.spotifytracker.infrastructure.spotify.MariadbListeningRepository;
+import com.lukamaret.spotifytracker.infrastructure.spotify.MariadbPlaylistRepository;
+import com.lukamaret.spotifytracker.infrastructure.spotify.MariadbTrackRepository;
 import com.lukamaret.spotifytracker.view.message.DiscordMessageSender;
-import com.wrapper.spotify.SpotifyApi;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
+import se.michaelthelin.spotify.SpotifyApi;
 
 public class MainModule extends AbstractModule {
 
@@ -66,10 +66,10 @@ public class MainModule extends AbstractModule {
         bind(DatabaseConfiguration.class).toInstance(databaseConfiguration);
         bind(DiscordConfiguration.class).toInstance(discordConfiguration);
         bind(TrackService.class);
-        bind(TrackRepository.class).to(PostgresTrackRepository.class);
-        bind(PlaylistRepository.class).to(PostgresPlaylistRepository.class);
-        bind(ArtistsRepository.class).to(PostgresArtistsRepository.class);
-        bind(ListeningRepository.class).to(PostgresListeningRepository.class);
+        bind(TrackRepository.class).to(MariadbTrackRepository.class);
+        bind(PlaylistRepository.class).to(MariadbPlaylistRepository.class);
+        bind(ArtistsRepository.class).to(MariadbArtistsRepository.class);
+        bind(ListeningRepository.class).to(MariadbListeningRepository.class);
         bind(MessageSender.class).to(DiscordMessageSender.class);
         bind(ChannelCleaner.class).to(DiscordChannelCleaner.class);
     }
