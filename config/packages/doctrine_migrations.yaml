@@ -1,0 +1,12 @@
+doctrine_migrations:
+    enable_profiler: true
+    migrations_paths:
+        'DoctrineMigrations': '%kernel.project_dir%/migrations'
+
+    storage:
+        table_storage:
+            table_name: 'migration_versions'
+            version_column_name: 'version'
+            version_column_length: 191
+            executed_at_column_name: 'executed_at'
+            execution_time_column_name: 'execution_time'
