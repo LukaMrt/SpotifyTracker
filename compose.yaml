@@ -12,3 +12,9 @@ services:
       - ./var/lib/database:/var/lib/mysql
     ports:
       - "${MYSQL_PORT}:3306"
+  mail:
+    image: mailhog/mailhog
+    container_name: mail_container
+    ports:
+      - "${MAIL_PORT}:1025"
+      - "8025:8025"

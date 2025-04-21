@@ -9,19 +9,29 @@ use App\Domain\Entity\SpotifyId;
 use App\Domain\Entity\Track;
 use App\Domain\Message\StoreListening;
 use App\Domain\Repository\ListeningRepositoryInterface;
+use Psr\Cache\CacheItemInterface;
 use Psr\Log\LoggerInterface;
 use SpotifyWebAPI\Session;
 use SpotifyWebAPI\SpotifyWebAPI;
+use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Symfony\Component\Mime\Email;
 use Symfony\Component\Serializer\Encoder\DecoderInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 
 #[AsMessageHandler]
 class StoreListeningHandler
 {
-    private const array SCOPES = [
+    protected const array SCOPES = [
         'user-read-currently-playing',
     ];
+
+    protected const int    FAIL_COUNT_BEFORE_NOTIFICATION = 1;
+    protected const int    DELAY_BETWEEN_NOTIFICATIONS    = 1_800; // 30 minutes
+    protected const int    CACHE_FAILURE_EXPIRE_TIME      = 3_600; // 1 hour
+    protected const string CACHE_FAIL_COUNT_KEY           = 'spotify_fail_count';
+    protected const string CACHE_LAST_NOTIFICATION_KEY    = 'spotify_fail_last_notification';
+    public    const string CACHE_TOKENS_KEY               = 'spotify_tokens';
 
     public function __construct(
         protected readonly ListeningRepositoryInterface $listeningRepository,
@@ -30,13 +40,15 @@ class StoreListeningHandler
         protected readonly DecoderInterface $decoder,
         protected readonly LoggerInterface $logger,
         protected readonly CacheInterface $cache,
+        protected readonly MailerInterface $mailer,
+        protected readonly string $adminEmailAddress,
     ) {
     }
 
     protected function connect(): bool
     {
         $this->logger->info('Connecting to Spotify');
-        $cacheItem = $this->cache->getItem('spotify_tokens');
+        $cacheItem = $this->cache->getItem(self::CACHE_TOKENS_KEY);
 
         if ($cacheItem->isHit()) {
             $this->logger->info('Cache hit');
@@ -55,10 +67,12 @@ class StoreListeningHandler
     {
         $connected = $this->connect();
 
-        if (!$connected) {
+        if ($connected) {
+            $this->handleFailure();
             return;
         }
 
+        $this->cache->delete(self::CACHE_FAIL_COUNT_KEY);
         $this->logger->info('Retrieving current playback info');
         $current = $this->spotifyApi->getMyCurrentTrack();
 
@@ -106,5 +120,61 @@ class StoreListeningHandler
             track: $track,
             playlist: $playlist,
         );
+    }
+
+    public function handleFailure(): void
+    {
+        $this->logger->info('Spotify API not connected');
+        $failCount = $this->cache->get(
+            self::CACHE_FAIL_COUNT_KEY,
+            static function (CacheItemInterface $item) {
+                $item->expiresAfter(self::CACHE_FAILURE_EXPIRE_TIME); // 1 hour
+                return 0;
+            }
+        );
+        $failCount++;
+        $this->cache->delete(self::CACHE_FAIL_COUNT_KEY);
+        $this->cache->get(
+            self::CACHE_FAIL_COUNT_KEY,
+            static function (CacheItemInterface $item) use ($failCount) {
+                $item->expiresAfter(self::CACHE_FAILURE_EXPIRE_TIME); // 1 hour
+                return $failCount;
+            }
+        );
+
+        $this->logger->info('Fail count : ' . $failCount);
+        if ($failCount <= self::FAIL_COUNT_BEFORE_NOTIFICATION) {
+            return;
+        }
+
+        $lastNotification = $this->cache->get(
+            self::CACHE_LAST_NOTIFICATION_KEY,
+            static function (CacheItemInterface $item) {
+                $item->expiresAfter(self::CACHE_FAILURE_EXPIRE_TIME); // 1 hour
+                return 0;
+            }
+        );
+
+        $this->logger->info('Last notification : ' . (new \DateTimeImmutable('@' . $lastNotification))->format('Y-m-d H:i:s'));
+        if (time() - $lastNotification < self::DELAY_BETWEEN_NOTIFICATIONS) { // 30 minutes
+            return;
+        }
+
+        $this->cache->delete(self::CACHE_LAST_NOTIFICATION_KEY);
+        $this->cache->get(
+            self::CACHE_LAST_NOTIFICATION_KEY,
+            static function (CacheItemInterface $item) {
+                $item->expiresAfter(self::CACHE_FAILURE_EXPIRE_TIME); // 1 hour
+                return time();
+            }
+        );
+
+        $email = (new Email())
+            ->subject('Spotify tracker not connected')
+            ->text('Spotify tracker not connected for too long')
+            ->to($this->adminEmailAddress);
+
+        $this->logger->error('Tracker not connected for too long, sending notification');
+        $this->mailer->send($email);
     }
 }

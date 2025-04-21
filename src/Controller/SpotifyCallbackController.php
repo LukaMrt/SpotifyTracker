@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Handler\StoreListeningHandler;
 use SpotifyWebAPI\Session;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -26,8 +27,8 @@ class SpotifyCallbackController extends AbstractController
     #[Route('/login', name: 'spotify_tracker.spotify_login_callback')]
     public function index(#[MapQueryParameter] string $code): Response
     {
-        $tokens = $this->cache->get(
-            'spotify_tokens',
+        $this->cache->get(
+            StoreListeningHandler::CACHE_TOKENS_KEY,
             function (ItemInterface $item) use ($code) {
                 $this->session->requestAccessToken($code);
                 $item->expiresAfter(86_400); // 1 day
