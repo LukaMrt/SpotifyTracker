@@ -58,8 +58,6 @@ class StoreListeningHandler
             return true;
         }
 
-        $authorizeUrl = $this->session->getAuthorizeUrl(['scope' => self::SCOPES]);
-        $this->logger->error('Cache miss, authorize URL : ' . $authorizeUrl);
         return false;
     }
 
@@ -67,7 +65,7 @@ class StoreListeningHandler
     {
         $connected = $this->connect();
 
-        if ($connected) {
+        if (!$connected) {
             $this->handleFailure();
             return;
         }
@@ -125,6 +123,8 @@ class StoreListeningHandler
     public function handleFailure(): void
     {
         $this->logger->info('Spotify API not connected');
+        $authorizeUrl = $this->session->getAuthorizeUrl(['scope' => self::SCOPES]);
+        $this->logger->error('Authorize URL : ' . $authorizeUrl);
         $failCount = $this->cache->get(
             self::CACHE_FAIL_COUNT_KEY,
             static function (CacheItemInterface $item) {
