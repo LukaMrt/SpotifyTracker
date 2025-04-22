@@ -1,0 +1,41 @@
+# Use PHP 8.4 CLI Alpine as base image
+FROM php:8.4-cli-alpine
+
+WORKDIR /app
+
+# Environment
+RUN echo "APP_ENV=prod" > .env
+
+# Install netcat for database connection checking
+RUN apk add --no-cache netcat-openbsd
+
+# Install PHP extension intl
+RUN apk add --no-cache icu-dev \
+    && docker-php-ext-install -j$(nproc) intl \
+        pdo \
+        pdo_mysql \
+        opcache
+
+# Copy application files
+COPY bin/console bin/console
+COPY config config
+COPY migrations migrations
+COPY public public
+COPY src src
+COPY composer.json composer.lock ./
+COPY symfony.lock symfony.lock
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Run post-install scripts now that everything is present
+RUN composer install --no-dev --optimize-autoloader --no-scripts
+
+# Copy entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/custom-entrypoint.sh
+RUN chmod +x /usr/local/bin/custom-entrypoint.sh
+
+ENV APP_MODE=""
+ENV SPOTIFY_CODE=""
+
+ENTRYPOINT ["/usr/local/bin/custom-entrypoint.sh"]

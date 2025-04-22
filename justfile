@@ -2,6 +2,7 @@ set shell := ["powershell.exe", "-Command"]
 
 MESSENGER_VERBOSITY := '-v'
 PHP := 'php bin/console'
+ENV_FILE := '.env.local'
 
 docker_up: docker_build
     docker-compose up -d
@@ -61,3 +62,15 @@ server_stop:
 
 server_logs:
     symfony server:log
+
+spotify_login code:
+    docker run \
+        --rm \
+        --env-file {{ENV_FILE}} \
+        -e SPOTIFY_CODE='{{code}}' \
+        --network spotifytracker_default \
+        --name spotify-login \
+        lukamrt/spotify-tracker-scheduler
+
+docker_build_publish:
+    docker buildx build --platform linux/arm64 -t lukamrt/spotify-tracker-scheduler --push .

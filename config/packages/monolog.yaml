@@ -12,6 +12,9 @@ monolog:
             max_files: 2
             level: error
 
+        console:
+            type: console
+            action_level: error
 
 when@dev:
     monolog:

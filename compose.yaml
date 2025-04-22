@@ -18,3 +18,16 @@ services:
     ports:
       - "${MAIL_PORT}:1025"
       - "8025:8025"
+  scheduler:
+    build:
+        context: .
+        dockerfile: Dockerfile
+        tags:
+          - lukamrt/spotify-tracker-scheduler
+    container_name: scheduler_container
+    restart: unless-stopped
+    env_file:
+      - .env.prod
+    depends_on:
+      - mail
+      - database

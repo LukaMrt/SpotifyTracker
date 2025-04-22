@@ -66,7 +66,8 @@
         ],
         "post-update-cmd": [
             "@auto-scripts"
-        ]
+        ],
+        "docker": "docker buildx build --platform linux/arm64 -t lukamrt/spotify-tracker-scheduler --push ."
     },
     "conflict": {
         "symfony/symfony": "*"
