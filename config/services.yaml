@@ -1,0 +1,30 @@
+parameters:
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        bind:
+            $adminEmailAddress: '%env(MAIL_ADMIN)%'
+
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+
+    SpotifyWebAPI\Session:
+        arguments:
+            $clientId: '%env(SPOTIFY_CLIENT_ID)%'
+            $clientSecret: '%env(SPOTIFY_CLIENT_SECRET)%'
+            $redirectUri: '%env(SPOTIFY_REDIRECT_URI)%'
+
+    SpotifyWebAPI\SpotifyWebAPI:
+        arguments:
+            $options:
+                auto_refresh: true
+                auto_retry: true
+                return_assoc: true
+            $session:
+                '@SpotifyWebAPI\Session'

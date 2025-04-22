@@ -1,0 +1,13 @@
+doctrine:
+    dbal:
+        url: '%env(resolve:MYSQL_DRIVER)%://%env(resolve:MYSQL_USER)%:%env(resolve:MYSQL_PASSWORD)%@%env(resolve:MYSQL_HOST)%:%env(resolve:MYSQL_PORT)%/%env(resolve:MYSQL_DATABASE)%'
+        server_version: '%env(resolve:MYSQL_VERSION)%'
+
+        profiling_collect_backtrace: '%kernel.debug%'
+        use_savepoints: true
+
+when@test:
+    doctrine:
+        dbal:
+            # "TEST_TOKEN" is typically set by ParaTest
+            dbname_suffix: '_test%env(default::TEST_TOKEN)%'

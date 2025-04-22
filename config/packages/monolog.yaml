@@ -1,0 +1,30 @@
+monolog:
+    handlers:
+        filter_errors:
+            type: fingers_crossed
+            action_level: error
+            handler: nested
+            buffer_size: 20
+
+        nested:
+            type: rotating_file
+            path: "%kernel.logs_dir%/error.log"
+            max_files: 2
+            level: error
+
+        console:
+            type: console
+            action_level: error
+
+when@dev:
+    monolog:
+        handlers:
+            info_file:
+                type: stream
+                path: "%kernel.logs_dir%/info.log"
+                level: info
+                max_files: 1
+            console:
+                type: console
+                level: warning
+                bubble: false

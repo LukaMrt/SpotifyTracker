@@ -1,0 +1,10 @@
+framework:
+    cache:
+        app: cache.adapter.doctrine_dbal
+        default_doctrine_dbal_provider: 'doctrine.dbal.default_connection'
+        prefix_seed: lukamaret/spotify_tracker
+
+        pools:
+            app.cache:
+                adapter: cache.app
+                default_lifetime: 86_400 # 1 day
