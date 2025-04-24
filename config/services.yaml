@@ -6,6 +6,7 @@ services:
         autoconfigure: true
         bind:
             $adminEmailAddress: '%env(MAIL_ADMIN)%'
+            $spotifyCode: '%env(SPOTIFY_CODE)%'
 
     App\:
         resource: '../src/'

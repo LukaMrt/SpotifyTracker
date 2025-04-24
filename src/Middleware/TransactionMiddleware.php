@@ -18,7 +18,12 @@ class TransactionMiddleware implements MiddlewareInterface
     {
         $this->connection->beginTransaction();
 
-        $envelope = $stack->next()->handle($envelope, $stack);
+        try {
+            $envelope = $stack->next()->handle($envelope, $stack);
+        } catch (\Throwable $e) {
+            $this->connection->rollBack();
+            throw $e;
+        }
 
         $this->connection->commit();
         return $envelope;

@@ -19,8 +19,6 @@ use Symfony\Contracts\Cache\ItemInterface;
 #[AsCommand(name: 'spotify-tracker:tokens')]
 class GenerateSpotifyTokensCommand extends Command
 {
-    protected const int CACHE_TOKENS_EXPIRATION = 86_400; // 1 day
-
     public function __construct(
         protected readonly Session $session,
         protected readonly SerializerInterface $serializer,
@@ -48,7 +46,7 @@ class GenerateSpotifyTokensCommand extends Command
             StoreListeningHandler::CACHE_TOKENS_KEY,
             function (ItemInterface $item) use ($code) {
                 $this->session->requestAccessToken($code);
-                $item->expiresAfter(self::CACHE_TOKENS_EXPIRATION);
+                $item->expiresAfter(StoreListeningHandler::CACHE_TOKENS_EXPIRATION);
                 return $this->serializer->serialize(
                     [
                         'access_token'  => $this->session->getAccessToken(),

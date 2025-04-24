@@ -17,7 +17,9 @@ use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Serializer\Encoder\DecoderInterface;
+use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 
 #[AsMessageHandler]
 class StoreListeningHandler
@@ -29,6 +31,7 @@ class StoreListeningHandler
     protected const int    FAIL_COUNT_BEFORE_NOTIFICATION = 1;
     protected const int    DELAY_BETWEEN_NOTIFICATIONS    = 1_800; // 30 minutes
     protected const int    CACHE_FAILURE_EXPIRE_TIME      = 3_600; // 1 hour
+    public    const int    CACHE_TOKENS_EXPIRATION        = 86_400; // 1 day
     protected const string CACHE_FAIL_COUNT_KEY           = 'spotify_fail_count';
     protected const string CACHE_LAST_NOTIFICATION_KEY    = 'spotify_fail_last_notification';
     public    const string CACHE_TOKENS_KEY               = 'spotify_tokens';
@@ -41,7 +44,9 @@ class StoreListeningHandler
         protected readonly LoggerInterface $logger,
         protected readonly CacheInterface $cache,
         protected readonly MailerInterface $mailer,
+        protected readonly SerializerInterface $serializer,
         protected readonly string $adminEmailAddress,
+        protected readonly string $spotifyCode,
     ) {
     }
 
@@ -58,33 +63,62 @@ class StoreListeningHandler
             return true;
         }
 
+        if (!empty($this->spotifyCode)) {
+            $code = $this->spotifyCode;
+            $this->cache->get(
+                StoreListeningHandler::CACHE_TOKENS_KEY,
+                function (ItemInterface $item) use ($code) {
+                    $this->session->requestAccessToken($code);
+                    $item->expiresAfter(self::CACHE_TOKENS_EXPIRATION);
+                    return $this->serializer->serialize(
+                        [
+                            'access_token'  => $this->session->getAccessToken(),
+                            'refresh_token' => $this->session->getRefreshToken(),
+                        ],
+                        'json'
+                    );
+                }
+            );
+        }
+
         return false;
     }
 
     public function __invoke(StoreListening $storeListening): void
     {
-        $connected = $this->connect();
+        try {
+            $connected = $this->connect();
 
-        if (!$connected) {
+            if (!$connected) {
+                $this->handleFailure();
+                return;
+            }
+
+            $this->cache->delete(self::CACHE_FAIL_COUNT_KEY);
+            $this->logger->info('Retrieving current playback info');
+            $current = $this->spotifyApi->getMyCurrentTrack();
+
+            if (isset($current['error'])) {
+                throw new \RuntimeException($current['error']['message']);
+            }
+
+            if ($current === null || !$current['is_playing']) {
+                $this->logger->info('No track is currently playing');
+                return;
+            }
+
+            $listening = $this->extractListening($current, $storeListening);
+            $this->listeningRepository->save($listening);
+        } catch (\Throwable $e) {
+            $this->logger->error(
+                'Error while retrieving current playback info',
+                [
+                    'message' => $e->getMessage(),
+                    'trace'   => $e->getTraceAsString(),
+                ]
+            );
             $this->handleFailure();
-            return;
         }
-
-        $this->cache->delete(self::CACHE_FAIL_COUNT_KEY);
-        $this->logger->info('Retrieving current playback info');
-        $current = $this->spotifyApi->getMyCurrentTrack();
-
-        if (isset($current['error'])) {
-            throw new \RuntimeException($current['error']['message']);
-        }
-
-        if (!$current['is_playing']) {
-            $this->logger->info('No track is currently playing');
-            return;
-        }
-
-        $listening = $this->extractListening($current, $storeListening);
-        $this->listeningRepository->save($listening);
     }
 
     protected function extractListening(object|array $current, StoreListening $storeListening): Listening

@@ -36,4 +36,4 @@ php bin/console cache:warmup
 php bin/console doctrine:migrations:migrate --no-interaction
 
 echo "Starting messenger consumer"
-exec php bin/console messenger:consume --all
+exec php bin/console messenger:consume --all -v

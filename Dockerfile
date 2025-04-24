@@ -5,16 +5,20 @@ WORKDIR /app
 
 # Environment
 RUN echo "APP_ENV=prod" > .env
+ENV APP_MODE=""
+ENV SPOTIFY_CODE=""
 
 # Install netcat for database connection checking
 RUN apk add --no-cache netcat-openbsd
 
 # Install PHP extension intl
-RUN apk add --no-cache icu-dev \
-    && docker-php-ext-install -j$(nproc) intl \
+RUN apk add --no-cache icu-dev
+RUN docker-php-ext-install -j$(nproc) intl \
         pdo \
         pdo_mysql \
         opcache
+
+RUN apk add --no-cache bash
 
 # Copy application files
 COPY bin/console bin/console
@@ -34,8 +38,5 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts
 # Copy entrypoint script
 COPY docker-entrypoint.sh /usr/local/bin/custom-entrypoint.sh
 RUN chmod +x /usr/local/bin/custom-entrypoint.sh
-
-ENV APP_MODE=""
-ENV SPOTIFY_CODE=""
 
 ENTRYPOINT ["/usr/local/bin/custom-entrypoint.sh"]
