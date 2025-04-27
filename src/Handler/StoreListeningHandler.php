@@ -90,7 +90,7 @@ class StoreListeningHandler
             $connected = $this->connect();
 
             if (!$connected) {
-                $this->handleFailure();
+                $this->handleFailure(false);
                 return;
             }
 
@@ -109,6 +109,20 @@ class StoreListeningHandler
 
             $listening = $this->extractListening($current, $storeListening);
             $this->listeningRepository->save($listening);
+            $this->cache->delete(self::CACHE_TOKENS_KEY);
+            $this->cache->get(
+                self::CACHE_TOKENS_KEY,
+                function (ItemInterface $item) {
+                    $item->expiresAfter(self::CACHE_TOKENS_EXPIRATION);
+                    return $this->serializer->serialize(
+                        [
+                            'access_token'  => $this->session->getAccessToken(),
+                            'refresh_token' => $this->session->getRefreshToken(),
+                        ],
+                        'json'
+                    );
+                }
+            );
         } catch (\Throwable $e) {
             $this->logger->error(
                 'Error while retrieving current playback info',
@@ -117,7 +131,20 @@ class StoreListeningHandler
                     'trace'   => $e->getTraceAsString(),
                 ]
             );
-            $this->handleFailure();
+            $this->handleFailure(true);
+            $this->cache->get(
+                self::CACHE_TOKENS_KEY,
+                function (ItemInterface $item) {
+                    $item->expiresAfter(self::CACHE_TOKENS_EXPIRATION);
+                    return $this->serializer->serialize(
+                        [
+                            'access_token'  => $this->session->getAccessToken(),
+                            'refresh_token' => $this->session->getRefreshToken(),
+                        ],
+                        'json'
+                    );
+                }
+            );
         }
     }
 
@@ -138,13 +165,22 @@ class StoreListeningHandler
         $this->logger->info('Track found', [$current['item']['name']]);
 
         if (isset($current['context']) && $current['context']['type'] === 'playlist') {
-            $id       = str_replace('spotify:playlist:', '', $current['context']['uri']);
-            $playlist = $this->spotifyApi->getPlaylist($id);
-            $this->logger->info('Playlist found', [$playlist['name']]);
-            $playlist = new Playlist(
-                id: new SpotifyId($playlist['id']),
-                name: $playlist['name'],
-            );
+            try {
+                $id = str_replace('spotify:playlist:', '', $current['context']['uri']);
+                $playlist = $this->spotifyApi->getPlaylist($id);
+                $this->logger->info('Playlist found', [$playlist['name']]);
+                $playlist = new Playlist(
+                    id: new SpotifyId($playlist['id']),
+                    name: $playlist['name'],
+                );
+            } catch (\Throwable) {
+                $this->logger->info(
+                    'Unknown playlist',
+                    [
+                        'playlistId' => str_replace('spotify:playlist:', '', $current['context']['uri']),
+                    ]
+                );
+            }
         }
 
         return new Listening(
@@ -154,11 +190,13 @@ class StoreListeningHandler
         );
     }
 
-    public function handleFailure(): void
+    public function handleFailure(bool $connected): void
     {
-        $this->logger->info('Spotify API not connected');
-        $authorizeUrl = $this->session->getAuthorizeUrl(['scope' => self::SCOPES]);
-        $this->logger->error('Authorize URL : ' . $authorizeUrl);
+        if (!$connected) {
+            $this->logger->info('Spotify API not connected');
+            $authorizeUrl = $this->session->getAuthorizeUrl(['scope' => self::SCOPES]);
+            $this->logger->error('Authorize URL : ' . $authorizeUrl);
+        }
         $failCount = $this->cache->get(
             self::CACHE_FAIL_COUNT_KEY,
             static function (CacheItemInterface $item) {

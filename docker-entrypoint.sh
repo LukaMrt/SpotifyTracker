@@ -18,16 +18,6 @@ done
 
 echo "Database is ready!"
 
-# Check APP_MODE and execute appropriate command
-if [ "$APP_MODE" = "login" ]; then
-    if [ -z "$SPOTIFY_CODE" ]; then
-        echo "Error: SPOTIFY_CODE is required when APP_MODE is spotify_login"
-        exit 1
-    fi
-    echo "Running spotify-tracker:tokens command with code: $SPOTIFY_CODE"
-    exec php bin/console spotify-tracker:tokens "$SPOTIFY_CODE"
-fi
-
 # Reset the cache
 php bin/console cache:clear --no-warmup
 php bin/console cache:warmup
