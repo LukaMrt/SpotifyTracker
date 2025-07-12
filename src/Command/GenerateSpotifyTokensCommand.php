@@ -6,6 +6,7 @@ namespace App\Command;
 
 use App\Domain\Service\SpotifyConnectionService;
 use SpotifyWebAPI\Session;
+use Symfony\Component\Console\Attribute\Argument;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -16,42 +17,35 @@ use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
-#[AsCommand(name: 'spotify-tracker:tokens')]
-class GenerateSpotifyTokensCommand extends Command
+#[AsCommand(
+    name: 'spotify-tracker:tokens',
+    description: 'Generate Spotify tokens from authorization code',
+    help: 'This command allows you to generate Spotify tokens using the authorization code flow.',
+)]
+class GenerateSpotifyTokensCommand
 {
     public function __construct(
         protected readonly Session $session,
         protected readonly SerializerInterface $serializer,
-        protected readonly CacheInterface $cache,
+        protected readonly CacheInterface $cache
     ) {
-        parent::__construct();
     }
 
-    #[\Override]
-    protected function configure(): void
+    public function __invoke(
+        #[Argument(
+            description: 'The authorization code received from Spotify.',
+            name: 'code'
+        )]
+        string $code,
+        SymfonyStyle $io,
+    ): int
     {
-        $this->setDescription('Generate Spotify Tokens from authorization code')
-            ->setHelp('This command allows you to generate Spotify tokens using the authorization code flow.')
-            ->addArgument('code', InputArgument::REQUIRED, 'The authorization code received from Spotify.');
-    }
-
-    #[\Override]
-    protected function execute(InputInterface $input, OutputInterface $output): int
-    {
-        $io = new SymfonyStyle($input, $output);
         $io->title('Generate Spotify Tokens from authorization code');
-
-        $code = $input->getArgument('code');
-
-        if (!is_string($code)) {
-            $code = '';
-        }
-
         $io->note('Using authorization code: ' . $code);
-
+        
         $this->cache->get(
             SpotifyConnectionService::CACHE_TOKENS_KEY,
-            function (ItemInterface $item) use ($code) {
+            function (ItemInterface $item) use ($code): string {
                 $this->session->requestAccessToken($code);
                 $item->expiresAfter(SpotifyConnectionService::CACHE_TOKENS_EXPIRATION);
                 return $this->serializer->serialize(
@@ -63,7 +57,6 @@ class GenerateSpotifyTokensCommand extends Command
                 );
             }
         );
-
         $io->success('Spotify tokens generated and cached successfully.');
         return Command::SUCCESS;
     }

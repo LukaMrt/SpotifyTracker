@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Infrastructure\Repository;
 
 use App\Domain\Entity\Artist;
@@ -104,7 +106,7 @@ class ListeningMysqlRepository implements ListeningRepositoryInterface
 
     protected function savePlaylist(?Playlist $playlist): void
     {
-        if ($playlist === null) {
+        if (!$playlist instanceof \App\Domain\Entity\Playlist) {
             return;
         }
 

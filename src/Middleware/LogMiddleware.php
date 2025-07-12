@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Middleware;
 
 use Psr\Log\LoggerInterface;
@@ -28,13 +30,13 @@ class LogMiddleware implements MiddlewareInterface
                 'message' => $envelope->getMessage(),
             ]);
             return $result;
-        } catch (\Throwable $e) {
+        } catch (\Throwable $throwable) {
             $this->logger->error('Failed handling message', [
                 'message' => $envelope->getMessage(),
-                'exception_message' => $e->getMessage(),
-                'exception_trace' => $e->getTraceAsString(),
+                'exception_message' => $throwable->getMessage(),
+                'exception_trace' => $throwable->getTraceAsString(),
             ]);
-            throw $e;
+            throw $throwable;
         }
     }
 }

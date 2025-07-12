@@ -77,3 +77,6 @@ docker_build_publish:
 
 phpstan:
     vendor/bin/phpstan analyse -c phpstan.neon
+
+rector:
+    vendor/bin/rector process

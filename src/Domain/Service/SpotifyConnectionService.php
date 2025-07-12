@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Domain\Service;
 
 use App\Domain\Api\FakeSpotifyTokens;
@@ -12,6 +14,7 @@ use Symfony\Contracts\Cache\ItemInterface;
 class SpotifyConnectionService
 {
     public const string CACHE_TOKENS_KEY = 'spotify_tokens';
+    
     public const int CACHE_TOKENS_EXPIRATION = 86_400; // 1 day
 
     public function __construct(
@@ -28,7 +31,7 @@ class SpotifyConnectionService
         $this->logger->info('Connecting to Spotify');
 
         $tokens = $this->getTokensFromCache();
-        if ($tokens !== null) {
+        if ($tokens instanceof \App\Domain\Api\SpotifyTokens) {
             $this->setSessionTokens($tokens);
             return true;
         }
@@ -40,7 +43,7 @@ class SpotifyConnectionService
     {
         $tokens = $this->cache->get(
             self::CACHE_TOKENS_KEY,
-            function (ItemInterface $item) {
+            function (ItemInterface $item): \App\Domain\Api\SpotifyTokens {
                 $item->expiresAfter(self::CACHE_TOKENS_EXPIRATION);
                 return new SpotifyTokens('fake_access_token', 'fake_refresh_token');
             }
@@ -64,11 +67,12 @@ class SpotifyConnectionService
             $this->logger->info('Spotify code provided, requesting access token');
             $this->session->requestAccessToken($this->spotifyCode);
             $this->saveTokens();
-        } catch (\Exception $e) {
-            $this->logger->error('Invalid Spotify code provided: ' . $e->getMessage());
+        } catch (\Exception $exception) {
+            $this->logger->error('Invalid Spotify code provided: ' . $exception->getMessage());
             $this->spotifyFailureService->logConnectionFailure();
             return false;
         }
+        
         return true;
     }
 
@@ -77,7 +81,7 @@ class SpotifyConnectionService
         $this->cache->delete(self::CACHE_TOKENS_KEY);
         $this->cache->get(
             self::CACHE_TOKENS_KEY,
-            function (ItemInterface $item) {
+            function (ItemInterface $item): \App\Domain\Api\SpotifyTokens {
                 $item->expiresAfter(self::CACHE_TOKENS_EXPIRATION);
                 return new SpotifyTokens(
                     accessToken: $this->session->getAccessToken(),

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Domain\Service;
 
 use Psr\Cache\CacheItemInterface;
@@ -12,10 +14,17 @@ use Symfony\Contracts\Cache\CacheInterface;
 class SpotifyFailureService
 {
     private const int FAIL_COUNT_BEFORE_NOTIFICATION = 1;
-    private const int DELAY_BETWEEN_NOTIFICATIONS = 1_800; // 30 minutes
-    private const int CACHE_FAILURE_EXPIRE_TIME = 3_600; // 1 hour
+    
+    private const int DELAY_BETWEEN_NOTIFICATIONS = 1_800;
+
+     // 30 minutes
+    private const int CACHE_FAILURE_EXPIRE_TIME = 3_600;
+
+     // 1 hour
     private const string CACHE_FAIL_COUNT_KEY = 'spotify_fail_count';
+    
     private const string CACHE_LAST_NOTIFICATION_KEY = 'spotify_fail_last_notification';
+    
     private const array SCOPES = ['user-read-currently-playing'];
 
     public function __construct(
@@ -56,16 +65,16 @@ class SpotifyFailureService
     {
         $failCount = $this->cache->get(
             self::CACHE_FAIL_COUNT_KEY,
-            static fn(CacheItemInterface $item) => self::initializeCacheItem($item, 0)
+            static fn(CacheItemInterface $item): mixed => self::initializeCacheItem($item, 0)
         );
         assert(is_int($failCount), 'Fail count must be an integer');
 
-        $failCount++;
+        ++$failCount;
         $this->cache->delete(self::CACHE_FAIL_COUNT_KEY);
 
         $this->cache->get(
             self::CACHE_FAIL_COUNT_KEY,
-            static fn(CacheItemInterface $item) => self::initializeCacheItem($item, $failCount)
+            static fn(CacheItemInterface $item): mixed => self::initializeCacheItem($item, $failCount)
         );
 
         $this->logger->info('Fail count : ' . $failCount);
@@ -80,7 +89,7 @@ class SpotifyFailureService
 
         $lastNotification = $this->cache->get(
             self::CACHE_LAST_NOTIFICATION_KEY,
-            static fn(CacheItemInterface $item) => self::initializeCacheItem($item, 0)
+            static fn(CacheItemInterface $item): mixed => self::initializeCacheItem($item, 0)
         );
         assert(is_int($lastNotification), 'Last notification time must be an integer');
 
@@ -107,7 +116,7 @@ class SpotifyFailureService
         $this->cache->delete(self::CACHE_LAST_NOTIFICATION_KEY);
         $this->cache->get(
             self::CACHE_LAST_NOTIFICATION_KEY,
-            static fn(CacheItemInterface $item) => self::initializeCacheItem($item, time())
+            static fn(CacheItemInterface $item): mixed => self::initializeCacheItem($item, time())
         );
     }
 

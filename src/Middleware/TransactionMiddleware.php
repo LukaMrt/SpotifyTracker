@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Middleware;
 
 use Doctrine\DBAL\Connection;
@@ -21,9 +23,9 @@ class TransactionMiddleware implements MiddlewareInterface
 
         try {
             $envelope = $stack->next()->handle($envelope, $stack);
-        } catch (\Throwable $e) {
+        } catch (\Throwable $throwable) {
             $this->connection->rollBack();
-            throw $e;
+            throw $throwable;
         }
 
         $this->connection->commit();
