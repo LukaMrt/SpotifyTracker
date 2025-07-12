@@ -5,7 +5,6 @@ WORKDIR /app
 
 # Environment
 RUN echo "APP_ENV=prod" > .env
-ENV APP_MODE=""
 ENV SPOTIFY_CODE=""
 
 # Install netcat for database connection checking
@@ -21,13 +20,7 @@ RUN docker-php-ext-install -j$(nproc) intl \
 RUN apk add --no-cache bash
 
 # Copy application files
-COPY bin/console bin/console
-COPY config config
-COPY migrations migrations
-COPY public public
-COPY src src
-COPY composer.json composer.lock ./
-COPY symfony.lock symfony.lock
+COPY . .
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
