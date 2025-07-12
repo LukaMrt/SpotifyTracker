@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Domain\Service\Spotify;
+namespace App\Domain\Service;
 
-use App\Domain\Entity\SpotifyTokens;
-use App\Domain\Service\Spotify\SpotifyFailureService;
+use App\Domain\Api\FakeSpotifyTokens;
+use App\Domain\Api\SpotifyTokens;
 use Psr\Log\LoggerInterface;
 use SpotifyWebAPI\Session;
 use Symfony\Contracts\Cache\CacheInterface;
@@ -11,14 +11,15 @@ use Symfony\Contracts\Cache\ItemInterface;
 
 class SpotifyConnectionService
 {
-    private const string CACHE_TOKENS_KEY = 'spotify_tokens';
-    private const int CACHE_TOKENS_EXPIRATION = 86_400; // 1 day
+    public const string CACHE_TOKENS_KEY = 'spotify_tokens';
+    public const int CACHE_TOKENS_EXPIRATION = 86_400; // 1 day
 
     public function __construct(
         private readonly Session         $session,
-        private readonly CacheInterface  $cache,
+        private readonly CacheInterface $cache,
         private readonly LoggerInterface $logger,
-        private readonly string          $spotifyCode, private readonly SpotifyFailureService $spotifyFailureService,
+        private readonly string          $spotifyCode,
+        private readonly SpotifyFailureService $spotifyFailureService,
     ) {
     }
 
@@ -27,7 +28,7 @@ class SpotifyConnectionService
         $this->logger->info('Connecting to Spotify');
 
         $tokens = $this->getTokensFromCache();
-        if ($tokens) {
+        if ($tokens !== null) {
             $this->setSessionTokens($tokens);
             return true;
         }
@@ -37,19 +38,25 @@ class SpotifyConnectionService
 
     private function getTokensFromCache(): ?SpotifyTokens
     {
-        $cacheItem = $this->cache->getItem(self::CACHE_TOKENS_KEY);
+        $tokens = $this->cache->get(
+            self::CACHE_TOKENS_KEY,
+            function (ItemInterface $item) {
+                $item->expiresAfter(self::CACHE_TOKENS_EXPIRATION);
+                return new SpotifyTokens('fake_access_token', 'fake_refresh_token');
+            }
+        );
 
-        if ($cacheItem->isHit()) {
-            $this->logger->info('Cache hit');
-            return $cacheItem->get();
+        if ($tokens->getAccessToken() === 'fake_access_token') {
+            $this->logger->info('Cache miss, no tokens found');
+            return null;
         }
 
-        return null;
+        return $tokens;
     }
 
     private function authenticateWithCode(): bool
     {
-        if (empty($this->spotifyCode)) {
+        if ($this->spotifyCode === '') {
             return false;
         }
 
@@ -67,6 +74,7 @@ class SpotifyConnectionService
 
     public function saveTokens(): void
     {
+        $this->cache->delete(self::CACHE_TOKENS_KEY);
         $this->cache->get(
             self::CACHE_TOKENS_KEY,
             function (ItemInterface $item) {

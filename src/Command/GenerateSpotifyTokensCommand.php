@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Command;
 
-use App\Handler\StoreListeningHandler;
+use App\Domain\Service\SpotifyConnectionService;
 use SpotifyWebAPI\Session;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -27,6 +27,7 @@ class GenerateSpotifyTokensCommand extends Command
         parent::__construct();
     }
 
+    #[\Override]
     protected function configure(): void
     {
         $this->setDescription('Generate Spotify Tokens from authorization code')
@@ -34,19 +35,25 @@ class GenerateSpotifyTokensCommand extends Command
             ->addArgument('code', InputArgument::REQUIRED, 'The authorization code received from Spotify.');
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
         $io->title('Generate Spotify Tokens from authorization code');
 
         $code = $input->getArgument('code');
+
+        if (!is_string($code)) {
+            $code = '';
+        }
+
         $io->note('Using authorization code: ' . $code);
 
         $this->cache->get(
-            StoreListeningHandler::CACHE_TOKENS_KEY,
+            SpotifyConnectionService::CACHE_TOKENS_KEY,
             function (ItemInterface $item) use ($code) {
                 $this->session->requestAccessToken($code);
-                $item->expiresAfter(StoreListeningHandler::CACHE_TOKENS_EXPIRATION);
+                $item->expiresAfter(SpotifyConnectionService::CACHE_TOKENS_EXPIRATION);
                 return $this->serializer->serialize(
                     [
                         'access_token'  => $this->session->getAccessToken(),

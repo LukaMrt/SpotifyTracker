@@ -20,6 +20,7 @@ class ListeningMysqlRepository implements ListeningRepositoryInterface
     ) {
     }
 
+    #[\Override]
     public function save(Listening $listening): void
     {
         $this->saveTrack($listening->getTrack());

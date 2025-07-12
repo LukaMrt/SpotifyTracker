@@ -2,6 +2,9 @@
 
 namespace App\Handler;
 
+use App\Domain\Api\ApiArtist;
+use App\Domain\Api\ApiListening;
+use App\Domain\Api\ApiPlaylist;
 use App\Domain\Entity\Artist;
 use App\Domain\Entity\Listening;
 use App\Domain\Entity\Playlist;
@@ -9,22 +12,24 @@ use App\Domain\Entity\SpotifyId;
 use App\Domain\Entity\Track;
 use App\Domain\Message\StoreListening;
 use App\Domain\Repository\ListeningRepositoryInterface;
-use App\Domain\Service\Spotify\SpotifyConnectionService;
-use App\Domain\Service\Spotify\SpotifyFailureService;
+use App\Domain\Service\SpotifyConnectionService;
+use App\Domain\Service\SpotifyFailureService;
 use Psr\Log\LoggerInterface;
 use SpotifyWebAPI\SpotifyWebAPI;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 
 #[AsMessageHandler]
 class StoreListeningHandler
 {
     public function __construct(
         private readonly ListeningRepositoryInterface $listeningRepository,
-        private readonly SpotifyWebAPI $spotifyApi,
-        private readonly SpotifyConnectionService $connectionService,
-        private readonly SpotifyFailureService $failureService,
-        private readonly LoggerInterface $logger,
+        private readonly SpotifyWebAPI                $spotifyApi,
+        private readonly SpotifyConnectionService     $connectionService,
+        private readonly SpotifyFailureService        $failureService,
+        private readonly LoggerInterface              $logger,
+        private readonly DenormalizerInterface        $denormalizer,
     ) {
     }
 
@@ -39,7 +44,7 @@ class StoreListeningHandler
             $this->failureService->clearFailCount();
             $current = $this->getCurrentTrack();
 
-            if (!$this->isTrackPlaying($current)) {
+            if ($current->is_playing !== true) {
                 $this->logger->info('No track is currently playing');
                 return;
             }
@@ -52,28 +57,23 @@ class StoreListeningHandler
             if ($e->getCode() === Response::HTTP_UNAUTHORIZED) {
                 $this->logger->error('Spotify API returned 401 Unauthorized, clearing tokens');
                 $this->failureService->handleFailure(false);
-                $this->connectionService->clearTokens();
                 return;
             }
             $this->handleError($e);
         }
     }
 
-    private function getCurrentTrack(): array
+    private function getCurrentTrack(): ApiListening
     {
         $this->logger->info('Retrieving current playback info');
-        $current = $this->spotifyApi->getMyCurrentTrack();
+        $current = $this->denormalizer->denormalize($this->spotifyApi->getMyCurrentTrack(), ApiListening::class);
+        assert($current instanceof ApiListening, 'Current playback should be an ApiListening instance');
 
-        if (isset($current['error'])) {
-            throw new \RuntimeException($current['error']['message']);
+        if ($current->error !== null) {
+            throw new \RuntimeException($current->error->message ?? 'Unknown error while retrieving current playback');
         }
 
         return $current;
-    }
-
-    private function isTrackPlaying(?array $current): bool
-    {
-        return $current !== null && ($current['is_playing'] ?? false);
     }
 
     private function handleError(\Throwable $e): void
@@ -87,7 +87,7 @@ class StoreListeningHandler
         $this->connectionService->saveTokens();
     }
 
-    private function extractListening(array $current, StoreListening $storeListening): Listening
+    private function extractListening(ApiListening $current, StoreListening $storeListening): Listening
     {
         $track = $this->createTrackFromApiResponse($current);
         $playlist = $this->createPlaylistFromApiResponse($current);
@@ -99,50 +99,47 @@ class StoreListeningHandler
         );
     }
 
-    private function createTrackFromApiResponse(array $current): Track
+    private function createTrackFromApiResponse(ApiListening $current): Track
     {
+        assert($current->item !== null, 'Current item should not be null');
         $track = new Track(
-            id: new SpotifyId($current['item']['id']),
-            name: $current['item']['name'],
+            id: new SpotifyId($current->item->id),
+            name: $current->item->name,
             artists: array_map(
-                static fn($artist) => new Artist(
-                    id: new SpotifyId($artist['id']),
-                    name: $artist['name'],
+                static fn(ApiArtist $artist) => new Artist(
+                    id: new SpotifyId($artist->id),
+                    name: $artist->name,
                 ),
-                $current['item']['artists'],
+                $current->item->artists,
             ),
         );
 
-        $this->logger->info('Track found', ['track' => $current['item']['name']]);
+        $this->logger->info('Track found', ['track' => $current->item->name]);
         return $track;
     }
 
-    private function createPlaylistFromApiResponse(array $current): ?Playlist
+    private function createPlaylistFromApiResponse(ApiListening $current): ?Playlist
     {
-        if (!isset($current['context']) || $current['context']['type'] !== 'playlist') {
+        if ($current->context === null || $current->context->type !== 'playlist') {
             return null;
         }
 
+        $playlistId = str_replace('spotify:playlist:', '', $current->context->uri ?? '');
         try {
-            $playlistId = $this->extractPlaylistId($current['context']['uri']);
-            $playlistData = $this->spotifyApi->getPlaylist($playlistId);
+            $apiPlaylist = $this->denormalizer->denormalize($this->spotifyApi->getPlaylist($playlistId), ApiPlaylist::class);
+            assert($apiPlaylist instanceof ApiPlaylist, 'Playlist should be an ApiPlaylist');
 
-            $this->logger->info('Playlist found', ['playlist' => $playlistData['name']]);
+            $this->logger->info('Playlist found', ['playlist' => $apiPlaylist->name]);
 
             return new Playlist(
-                id: new SpotifyId($playlistData['id']),
-                name: $playlistData['name'],
+                id: new SpotifyId($apiPlaylist->id),
+                name: $apiPlaylist->name,
             );
         } catch (\Throwable) {
             $this->logger->info('Unknown playlist', [
-                'playlistId' => $this->extractPlaylistId($current['context']['uri']),
+                'playlistId' => $playlistId,
             ]);
             return null;
         }
-    }
-
-    private function extractPlaylistId(string $uri): string
-    {
-        return str_replace('spotify:playlist:', '', $uri);
     }
 }

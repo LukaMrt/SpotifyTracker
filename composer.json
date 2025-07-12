@@ -20,6 +20,7 @@
         "symfony/mailer": "7.3.*",
         "symfony/messenger": "7.3.*",
         "symfony/monolog-bundle": "^3.10",
+        "symfony/property-access": "7.3.*",
         "symfony/runtime": "7.3.*",
         "symfony/scheduler": "7.3.*",
         "symfony/serializer": "7.3.*",
@@ -30,6 +31,7 @@
     "config": {
         "allow-plugins": {
             "php-http/discovery": true,
+            "phpstan/extension-installer": true,
             "symfony/flex": true,
             "symfony/runtime": true
         },
@@ -76,9 +78,19 @@
         "symfony": {
             "allow-contrib": false,
             "require": "7.3.*"
+        },
+        "phpstan": {
+            "includes": [
+                "extension.neon"
+            ]
         }
     },
     "require-dev": {
+        "phpstan/extension-installer": "^1.4.3",
+        "phpstan/phpstan": "^2.1.17",
+        "phpstan/phpstan-deprecation-rules": "^2.0",
+        "phpstan/phpstan-strict-rules": "^2.0",
+        "phpstan/phpstan-symfony": "^2.0.6",
         "symfony/maker-bundle": "^1.64.0"
     }
 }

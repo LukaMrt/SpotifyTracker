@@ -24,6 +24,9 @@ class Track
         return $this->name;
     }
 
+    /**
+     * @return Artist[]
+     */
     public function getArtists(): array
     {
         return $this->artists;

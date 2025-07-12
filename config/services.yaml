@@ -15,6 +15,29 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
+    Symfony\Component\Cache\Adapter\AdapterInterface:
+        class: Symfony\Component\Cache\Adapter\DoctrineDbalAdapter
+
+    # Configure the serializer with proper normalizers
+    serializer.normalizer.object:
+        class: Symfony\Component\Serializer\Normalizer\ObjectNormalizer
+        arguments:
+            $classMetadataFactory: ~
+            $nameConverter: ~
+            $propertyAccessor: ~
+            $propertyTypeExtractor: ~
+            $classDiscriminatorResolver: ~
+            $objectClassResolver: ~
+            $defaultContext: []
+        tags: ['serializer.normalizer']
+
+    # Use the Symfony serializer service for both normalizer and denormalizer interfaces
+    Symfony\Component\Serializer\Normalizer\DenormalizerInterface:
+        alias: 'serializer'
+
+    Symfony\Component\Serializer\Normalizer\NormalizerInterface:
+        alias: 'serializer'
+
     SpotifyWebAPI\Session:
         arguments:
             $clientId: '%env(SPOTIFY_CLIENT_ID)%'

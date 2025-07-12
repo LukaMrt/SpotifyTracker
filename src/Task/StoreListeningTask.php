@@ -11,6 +11,7 @@ class StoreListeningTask extends AbstractTask
     protected const string INTERVAL = '30 seconds';
     protected const string TIMEZONE = 'Europe/Paris';
 
+    #[\Override]
     protected function getMessage(): object
     {
         return new StoreListening(new \DateTimeImmutable(datetime: 'now', timezone: new \DateTimeZone(self::TIMEZONE)));

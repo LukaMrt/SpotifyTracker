@@ -1,0 +1,40 @@
+
+parameters:
+    level: 10
+    paths:
+        - src
+
+    # Exclude certain files/directories
+    excludePaths:
+        - src/Kernel.php
+        - var/
+        - vendor/
+        - public/
+        - migrations/
+
+    # Error reporting
+    reportUnmatchedIgnoredErrors: true
+    checkTooWideReturnTypesInProtectedAndPublicMethods: true
+    checkUninitializedProperties: true
+    checkMissingCallableSignature: true
+    checkMissingVarTagTypehint: true
+    checkMissingOverrideMethodAttribute: true
+    checkExplicitMixed: true
+    checkImplicitMixed: true
+    checkBenevolentUnionTypes: true
+    polluteScopeWithAlwaysIterableForeach: true
+    treatPhpDocTypesAsCertain: false
+    
+    # Parallel processing
+    parallel:
+        jobSize: 20
+        maximumNumberOfProcesses: 4
+        minimumNumberOfJobsPerProcess: 2
+    
+    # Cache
+    tmpDir: var/cache/phpstan
+    
+    # Universal object crates
+    universalObjectCratesClasses:
+        - stdClass
+        - App\ValueObject\GenericData

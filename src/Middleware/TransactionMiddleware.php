@@ -14,6 +14,7 @@ class TransactionMiddleware implements MiddlewareInterface
     ) {
     }
 
+    #[\Override]
     public function handle(Envelope $envelope, StackInterface $stack): Envelope
     {
         $this->connection->beginTransaction();

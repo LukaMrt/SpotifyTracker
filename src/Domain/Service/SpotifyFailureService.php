@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domain\Service\Spotify;
+namespace App\Domain\Service;
 
 use Psr\Cache\CacheItemInterface;
 use Psr\Log\LoggerInterface;
@@ -58,6 +58,7 @@ class SpotifyFailureService
             self::CACHE_FAIL_COUNT_KEY,
             static fn(CacheItemInterface $item) => self::initializeCacheItem($item, 0)
         );
+        assert(is_int($failCount), 'Fail count must be an integer');
 
         $failCount++;
         $this->cache->delete(self::CACHE_FAIL_COUNT_KEY);
@@ -81,6 +82,7 @@ class SpotifyFailureService
             self::CACHE_LAST_NOTIFICATION_KEY,
             static fn(CacheItemInterface $item) => self::initializeCacheItem($item, 0)
         );
+        assert(is_int($lastNotification), 'Last notification time must be an integer');
 
         $this->logger->info('Last notification : ' . (new \DateTimeImmutable('@' . $lastNotification))->format('Y-m-d H:i:s'));
 

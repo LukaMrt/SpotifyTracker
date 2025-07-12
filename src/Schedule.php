@@ -11,10 +11,11 @@ use Symfony\Contracts\Cache\CacheInterface;
 class Schedule implements ScheduleProviderInterface
 {
     public function __construct(
-        private CacheInterface $cache,
+        private readonly CacheInterface $cache,
     ) {
     }
 
+    #[\Override]
     public function getSchedule(): SymfonySchedule
     {
         return (new SymfonySchedule())

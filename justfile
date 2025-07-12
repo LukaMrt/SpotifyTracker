@@ -74,3 +74,6 @@ spotify_login code:
 
 docker_build_publish:
     docker buildx build --platform linux/arm64 -t lukamrt/spotify-tracker-scheduler --push .
+
+phpstan:
+    vendor/bin/phpstan analyse -c phpstan.neon
