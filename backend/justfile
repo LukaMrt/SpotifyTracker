@@ -54,6 +54,9 @@ migration_list:
 migration_apply: docker_up
     {{PHP}} doctrine:migrations:migrate --no-interaction
 
+fixtures options='-c 100':
+    {{PHP}} app:fixtures {{options}}
+
 server_start:
     symfony server:start --allow-all-ip
 
