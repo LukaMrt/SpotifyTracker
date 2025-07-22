@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Domain\Entity\Listening;
-use App\Domain\Entity\SpotifyId;
-use App\Domain\Repository\ListeningRepositoryInterface;
+use App\Domain\Spotify\Entity\Listening;
+use App\Domain\Spotify\Entity\SpotifyId;
+use App\Domain\Spotify\Repository\ListeningRepositoryInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -294,7 +294,7 @@ class ListeningController extends AbstractController
         ], $listening->getTrack()->getArtists());
 
         $playlist = null;
-        if ($listening->getPlaylist() instanceof \App\Domain\Entity\Playlist) {
+        if ($listening->getPlaylist() instanceof \App\Domain\Spotify\Entity\Playlist) {
             $playlist = [
                 'id' => $listening->getPlaylist()->getId()->id,
                 'name' => $listening->getPlaylist()->getName(),

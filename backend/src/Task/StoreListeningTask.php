@@ -4,19 +4,23 @@ declare(strict_types=1);
 
 namespace App\Task;
 
-use App\Domain\Message\StoreListening;
+use App\Service\ListeningService;
 use Symfony\Component\Scheduler\Attribute\AsPeriodicTask;
 
 #[AsPeriodicTask(frequency: StoreListeningTask::INTERVAL)]
-class StoreListeningTask extends AbstractTask
+class StoreListeningTask
 {
     protected const string INTERVAL = '30 seconds';
     
     protected const string TIMEZONE = 'Europe/Paris';
 
-    #[\Override]
-    protected function getMessage(): object
+    public function __construct(
+        protected readonly ListeningService $listeningService,
+    ) {
+    }
+
+    public function __invoke(): void
     {
-        return new StoreListening(new \DateTimeImmutable(datetime: 'now', timezone: new \DateTimeZone(self::TIMEZONE)));
+        $this->listeningService->storeCurrentTrack();
     }
 }

@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Repository;
 
-use App\Domain\Entity\Artist;
-use App\Domain\Entity\Listening;
-use App\Domain\Entity\ListeningCount;
-use App\Domain\Entity\Playlist;
-use App\Domain\Entity\SpotifyId;
-use App\Domain\Entity\Track;
-use App\Domain\Repository\ListeningRepositoryInterface;
+use App\Domain\Spotify\Entity\Artist;
+use App\Domain\Spotify\Entity\Listening;
+use App\Domain\Spotify\Entity\ListeningCount;
+use App\Domain\Spotify\Entity\Playlist;
+use App\Domain\Spotify\Entity\SpotifyId;
+use App\Domain\Spotify\Entity\Track;
+use App\Domain\Spotify\Repository\ListeningRepositoryInterface;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Exception;
 use Doctrine\DBAL\ParameterType;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class ListeningMysqlRepository implements ListeningRepositoryInterface
@@ -29,26 +31,35 @@ class ListeningMysqlRepository implements ListeningRepositoryInterface
     #[\Override]
     public function save(Listening $listening): void
     {
-        $this->saveTrack($listening->getTrack());
-        $this->savePlaylist($listening->getPlaylist());
+        try {
+            $this->connection->beginTransaction();
 
-        $this->logger->info('Saving listening', ['dateTime'  => $listening->getDateTime()->format('Y-m-d H:i:s')]);
-        $this->connection->executeStatement(
-            <<<SQL
-                INSERT INTO listening (dateTime, track_id, playlist_id)
-                VALUES (:dateTime, :track_id, :playlist_id)
-        SQL,
-            [
-                'dateTime'    => $listening->getDateTime()->format('Y-m-d H:i:s'),
-                'track_id'    => $listening->getTrack()->getId(),
-                'playlist_id' => $listening->getPlaylist()?->getId(),
-            ],
-            [
-                'dateTime'    => ParameterType::STRING,
-                'track_id'    => ParameterType::BINARY,
-                'playlist_id' => ParameterType::BINARY,
-            ]
-        );
+            $this->saveTrack($listening->getTrack());
+            $this->savePlaylist($listening->getPlaylist());
+
+            $this->logger->info('Saving listening', ['dateTime'  => $listening->getDateTime()->format('Y-m-d H:i:s')]);
+            $this->connection->executeStatement(
+                <<<SQL
+                    INSERT INTO listening (dateTime, track_id, playlist_id)
+                    VALUES (:dateTime, :track_id, :playlist_id)
+            SQL,
+                [
+                    'dateTime'    => $listening->getDateTime()->format('Y-m-d H:i:s'),
+                    'track_id'    => $listening->getTrack()->getId(),
+                    'playlist_id' => $listening->getPlaylist()?->getId(),
+                ],
+                [
+                    'dateTime'    => ParameterType::STRING,
+                    'track_id'    => ParameterType::BINARY,
+                    'playlist_id' => ParameterType::BINARY,
+                ]
+            );
+
+            $this->connection->commit();
+        } catch (\Throwable $throwable) {
+            $this->connection->rollBack();
+            throw $throwable;
+        }
     }
 
     protected function saveTrack(Track $track): void
@@ -289,6 +300,8 @@ class ListeningMysqlRepository implements ListeningRepositoryInterface
     /**
      * @param SpotifyId[] $entityIds
      * @return ListeningCount[]
+     * @throws Exception
+     * @throws ExceptionInterface
      */
     private function getStats(
         string $entityName,

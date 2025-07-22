@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Entity;
+namespace App\Domain\Spotify\Entity;
 
 use Symfony\Component\Validator\Constraints as Assert;
 

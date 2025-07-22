@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Service;
+namespace App\Service;
 
 use Psr\Cache\CacheItemInterface;
 use Psr\Log\LoggerInterface;

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Service;
+namespace App\Service;
 
-use App\Domain\Api\SpotifyTokens;
+use App\Domain\Spotify\Api\SpotifyTokens;
 use Psr\Log\LoggerInterface;
 use SpotifyWebAPI\Session;
 use Symfony\Contracts\Cache\CacheInterface;

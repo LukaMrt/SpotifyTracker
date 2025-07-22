@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Api;
+namespace App\Domain\Spotify\Api;
 
 use Symfony\Component\Serializer\Attribute\SerializedName;
 

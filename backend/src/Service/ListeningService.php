@@ -2,32 +2,29 @@
 
 declare(strict_types=1);
 
-namespace App\Handler;
+namespace App\Service;
 
-use App\Domain\Api\ApiArtist;
-use App\Domain\Api\ApiError;
-use App\Domain\Api\ApiListening;
-use App\Domain\Api\ApiListeningContext;
-use App\Domain\Api\ApiListeningItem;
-use App\Domain\Api\ApiPlaylist;
-use App\Domain\Entity\Artist;
-use App\Domain\Entity\Listening;
-use App\Domain\Entity\Playlist;
-use App\Domain\Entity\SpotifyId;
-use App\Domain\Entity\Track;
-use App\Domain\Message\StoreListening;
-use App\Domain\Repository\ListeningRepositoryInterface;
-use App\Domain\Service\SpotifyConnectionService;
-use App\Domain\Service\SpotifyFailureService;
+use App\Domain\Spotify\Api\ApiArtist;
+use App\Domain\Spotify\Api\ApiError;
+use App\Domain\Spotify\Api\ApiListening;
+use App\Domain\Spotify\Api\ApiListeningContext;
+use App\Domain\Spotify\Api\ApiListeningItem;
+use App\Domain\Spotify\Api\ApiPlaylist;
+use App\Domain\Spotify\Entity\Artist;
+use App\Domain\Spotify\Entity\Listening;
+use App\Domain\Spotify\Entity\Playlist;
+use App\Domain\Spotify\Entity\SpotifyId;
+use App\Domain\Spotify\Entity\Track;
+use App\Domain\Spotify\Repository\ListeningRepositoryInterface;
 use Psr\Log\LoggerInterface;
 use SpotifyWebAPI\SpotifyWebAPI;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 
-#[AsMessageHandler]
-class StoreListeningHandler
+class ListeningService
 {
+    protected const string TIMEZONE = 'Europe/Paris';
+
     public function __construct(
         private readonly ListeningRepositoryInterface $listeningRepository,
         private readonly SpotifyWebAPI $spotifyApi,
@@ -38,7 +35,7 @@ class StoreListeningHandler
     ) {
     }
 
-    public function __invoke(StoreListening $storeListening): void
+    public function storeCurrentTrack(): void
     {
         try {
             if (!$this->connectionService->connect()) {
@@ -54,7 +51,7 @@ class StoreListeningHandler
                 return;
             }
 
-            $listening = $this->extractListening($current, $storeListening);
+            $listening = $this->extractListening($current);
             $this->listeningRepository->save($listening);
             $this->connectionService->saveTokens();
 
@@ -98,13 +95,13 @@ class StoreListeningHandler
         return $current;
     }
 
-    private function extractListening(ApiListening $current, StoreListening $storeListening): Listening
+    private function extractListening(ApiListening $current): Listening
     {
         $track = $this->createTrackFromApiResponse($current);
         $playlist = $this->createPlaylistFromApiResponse($current);
 
         return new Listening(
-            dateTime: $storeListening->date,
+            dateTime: new \DateTimeImmutable(datetime: 'now', timezone: new \DateTimeZone(self::TIMEZONE)),
             track: $track,
             playlist: $playlist,
         );

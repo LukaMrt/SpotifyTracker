@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Api;
+namespace App\Domain\Spotify\Api;
 
-class ApiArtist
+class ApiPlaylist
 {
     public function __construct(
         public readonly string $id,

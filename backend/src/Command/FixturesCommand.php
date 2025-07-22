@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Command;
 
-use App\Domain\Entity\Artist;
-use App\Domain\Entity\Listening;
-use App\Domain\Entity\Playlist;
-use App\Domain\Entity\SpotifyId;
-use App\Domain\Entity\Track;
-use App\Domain\Repository\ListeningRepositoryInterface;
+use App\Domain\Spotify\Entity\Artist;
+use App\Domain\Spotify\Entity\Listening;
+use App\Domain\Spotify\Entity\Playlist;
+use App\Domain\Spotify\Entity\SpotifyId;
+use App\Domain\Spotify\Entity\Track;
+use App\Domain\Spotify\Repository\ListeningRepositoryInterface;
 use Random\RandomException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Attribute\Option;

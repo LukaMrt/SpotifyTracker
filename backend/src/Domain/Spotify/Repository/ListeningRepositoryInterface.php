@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Domain\Repository;
+namespace App\Domain\Spotify\Repository;
 
-use App\Domain\Entity\Listening;
-use App\Domain\Entity\SpotifyId;
+use App\Domain\Spotify\Entity\Listening;
+use App\Domain\Spotify\Entity\SpotifyId;
 
 interface ListeningRepositoryInterface
 {

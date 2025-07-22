@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Serializer;
 
-use App\Domain\Api\ApiArtist;
-use App\Domain\Api\ApiListeningItem;
+use App\Domain\Spotify\Api\ApiArtist;
+use App\Domain\Spotify\Api\ApiListeningItem;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 
 class ApiListeningItemDenormalizer implements DenormalizerInterface
@@ -26,7 +26,7 @@ class ApiListeningItemDenormalizer implements DenormalizerInterface
     public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): ApiListeningItem
     {
         $artists = array_map(
-            static fn (array $artistData): \App\Domain\Api\ApiArtist => new ApiArtist(
+            static fn (array $artistData): \App\Domain\Spotify\Api\ApiArtist => new ApiArtist(
                 id: $artistData['id'],
                 name: $artistData['name']
             ),
