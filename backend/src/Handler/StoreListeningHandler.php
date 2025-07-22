@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace App\Handler;
 
 use App\Domain\Api\ApiArtist;
+use App\Domain\Api\ApiError;
 use App\Domain\Api\ApiListening;
+use App\Domain\Api\ApiListeningContext;
+use App\Domain\Api\ApiListeningItem;
 use App\Domain\Api\ApiPlaylist;
 use App\Domain\Entity\Artist;
 use App\Domain\Entity\Listening;
@@ -27,11 +30,11 @@ class StoreListeningHandler
 {
     public function __construct(
         private readonly ListeningRepositoryInterface $listeningRepository,
-        private readonly SpotifyWebAPI                $spotifyApi,
-        private readonly SpotifyConnectionService     $connectionService,
-        private readonly SpotifyFailureService        $failureService,
-        private readonly LoggerInterface              $logger,
-        private readonly DenormalizerInterface        $denormalizer,
+        private readonly SpotifyWebAPI $spotifyApi,
+        private readonly SpotifyConnectionService $connectionService,
+        private readonly SpotifyFailureService $failureService,
+        private readonly LoggerInterface $logger,
+        private readonly DenormalizerInterface $denormalizer,
     ) {
     }
 
@@ -56,13 +59,29 @@ class StoreListeningHandler
             $this->connectionService->saveTokens();
 
         } catch (\Throwable $throwable) {
-            if ($throwable->getCode() === Response::HTTP_UNAUTHORIZED) {
-                $this->logger->error('Spotify API returned 401 Unauthorized, clearing tokens');
-                $this->failureService->handleFailure(false);
+            $this->logger->error('Error while retrieving current playback info', [
+                'message' => $throwable->getMessage(),
+                'trace' => $throwable->getTraceAsString(),
+            ]);
+
+            $this->failureService->handleFailure(true);
+            $this->connectionService->saveTokens();
+
+            if (!is_int($throwable->getCode())) {
                 return;
             }
-            
-            $this->handleError($throwable);
+
+            if ($throwable->getCode() === Response::HTTP_UNAUTHORIZED) {
+                $this->logger->error('Spotify API returned 401 Unauthorized, clearing tokens');
+                $this->connectionService->clearTokens();
+            }
+
+            if ($throwable->getCode() / 100 === 5) {
+                $this->logger->error('Spotify API returned a server error', [
+                    'message' => $throwable->getMessage(),
+                    'code' => $throwable->getCode(),
+                ]);
+            }
         }
     }
 
@@ -72,22 +91,11 @@ class StoreListeningHandler
         $current = $this->denormalizer->denormalize($this->spotifyApi->getMyCurrentTrack(), ApiListening::class);
         assert($current instanceof ApiListening, 'Current playback should be an ApiListening instance');
 
-        if ($current->error instanceof \App\Domain\Api\ApiError) {
+        if ($current->error instanceof ApiError) {
             throw new \RuntimeException($current->error->message ?? 'Unknown error while retrieving current playback');
         }
 
         return $current;
-    }
-
-    private function handleError(\Throwable $e): void
-    {
-        $this->logger->error('Error while retrieving current playback info', [
-            'message' => $e->getMessage(),
-            'trace' => $e->getTraceAsString(),
-        ]);
-
-        $this->failureService->handleFailure(true);
-        $this->connectionService->saveTokens();
     }
 
     private function extractListening(ApiListening $current, StoreListening $storeListening): Listening
@@ -104,12 +112,12 @@ class StoreListeningHandler
 
     private function createTrackFromApiResponse(ApiListening $current): Track
     {
-        assert($current->item instanceof \App\Domain\Api\ApiListeningItem, 'Current item should not be null');
+        assert($current->item instanceof ApiListeningItem, 'Current item should not be null');
         $track = new Track(
             id: new SpotifyId($current->item->id),
             name: $current->item->name,
             artists: array_map(
-                static fn(ApiArtist $artist): \App\Domain\Entity\Artist => new Artist(
+                static fn(ApiArtist $artist): Artist => new Artist(
                     id: new SpotifyId($artist->id),
                     name: $artist->name,
                 ),
@@ -123,7 +131,7 @@ class StoreListeningHandler
 
     private function createPlaylistFromApiResponse(ApiListening $current): ?Playlist
     {
-        if (!$current->context instanceof \App\Domain\Api\ApiListeningContext || $current->context->type !== 'playlist') {
+        if (!$current->context instanceof ApiListeningContext || $current->context->type !== 'playlist') {
             return null;
         }
 

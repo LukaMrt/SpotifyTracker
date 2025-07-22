@@ -17,10 +17,10 @@ class SpotifyConnectionService
     public const int CACHE_TOKENS_EXPIRATION = 86_400; // 1 day
 
     public function __construct(
-        private readonly Session         $session,
+        private readonly Session $session,
         private readonly CacheInterface $cache,
         private readonly LoggerInterface $logger,
-        private readonly string          $spotifyCode,
+        private readonly string $spotifyCode,
         private readonly SpotifyFailureService $spotifyFailureService,
     ) {
     }
