@@ -150,19 +150,19 @@ class ListeningMysqlRepository implements ListeningRepositoryInterface
             'endDate' => ParameterType::STRING,
         ];
 
-        if ($playlistId !== null) {
+        if ($playlistId instanceof SpotifyId) {
             $where .= ' AND playlist.id = :playlistId';
             $params['playlistId'] = $playlistId;
             $types['playlistId'] = ParameterType::BINARY;
         }
 
-        if ($artistId !== null) {
+        if ($artistId instanceof SpotifyId) {
             $where .= ' AND artist.id = :artistId';
             $params['artistId'] = $artistId;
             $types['artistId'] = ParameterType::BINARY;
         }
 
-        if ($trackId !== null) {
+        if ($trackId instanceof SpotifyId) {
             $where .= ' AND track.id = :trackId';
             $params['trackId'] = $trackId;
             $types['trackId'] = ParameterType::BINARY;
@@ -206,7 +206,7 @@ class ListeningMysqlRepository implements ListeningRepositoryInterface
         );
 
         return array_map(
-            fn ($row) => $this->serializer->deserialize(
+            fn ($row): mixed => $this->serializer->deserialize(
                 $row['listening'],
                 Listening::class,
                 'json',
@@ -221,7 +221,7 @@ class ListeningMysqlRepository implements ListeningRepositoryInterface
         \DateTimeImmutable $endDate,
         array $artistIds
     ): array {
-        return $this->getStats(
+        $stats = $this->getStats(
             'artist',
             'listening
             INNER JOIN track ON listening.track_id = track.id
@@ -231,6 +231,13 @@ class ListeningMysqlRepository implements ListeningRepositoryInterface
             $endDate,
             $artistIds
         );
+
+        $result = [];
+        foreach ($stats as $stat) {
+            $result[$stat->getName()] = $stat->getCount();
+        }
+
+        return $result;
     }
 
     #[\Override]
@@ -239,7 +246,7 @@ class ListeningMysqlRepository implements ListeningRepositoryInterface
         \DateTimeImmutable $endDate,
         array $trackIds
     ): array {
-        return $this->getStats(
+        $stats = $this->getStats(
             'track',
             'listening
             INNER JOIN track ON listening.track_id = track.id',
@@ -247,6 +254,13 @@ class ListeningMysqlRepository implements ListeningRepositoryInterface
             $endDate,
             $trackIds
         );
+
+        $result = [];
+        foreach ($stats as $stat) {
+            $result[$stat->getName()] = $stat->getCount();
+        }
+
+        return $result;
     }
 
     #[\Override]
@@ -255,7 +269,7 @@ class ListeningMysqlRepository implements ListeningRepositoryInterface
         \DateTimeImmutable $endDate,
         array $playlistIds
     ): array {
-        return $this->getStats(
+        $stats = $this->getStats(
             'playlist',
             'listening
             INNER JOIN playlist ON listening.playlist_id = playlist.id',
@@ -263,8 +277,19 @@ class ListeningMysqlRepository implements ListeningRepositoryInterface
             $endDate,
             $playlistIds
         );
+
+        $result = [];
+        foreach ($stats as $stat) {
+            $result[$stat->getName()] = $stat->getCount();
+        }
+
+        return $result;
     }
 
+    /**
+     * @param SpotifyId[] $entityIds
+     * @return ListeningCount[]
+     */
     private function getStats(
         string $entityName,
         string $fromClause,
@@ -283,8 +308,8 @@ class ListeningMysqlRepository implements ListeningRepositoryInterface
             'endDate' => ParameterType::STRING,
         ];
 
-        if (!empty($entityIds)) {
-            $where .= " AND {$entityName}.id IN (:entityIds)";
+        if ($entityIds !== []) {
+            $where .= sprintf(' AND %s.id IN (:entityIds)', $entityName);
             $params["entityIds"] = $entityIds;
             $types["entityIds"] = ArrayParameterType::BINARY;
         }
@@ -306,7 +331,7 @@ class ListeningMysqlRepository implements ListeningRepositoryInterface
         );
 
         return array_map(
-            fn (array $row) => $this->serializer->deserialize(
+            fn (array $row): mixed => $this->serializer->deserialize(
                 $row["stat"],
                 ListeningCount::class,
                 'json',

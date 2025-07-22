@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Domain\Service;
 
-use App\Domain\Api\FakeSpotifyTokens;
 use App\Domain\Api\SpotifyTokens;
 use Psr\Log\LoggerInterface;
 use SpotifyWebAPI\Session;
@@ -31,7 +30,7 @@ class SpotifyConnectionService
         $this->logger->info('Connecting to Spotify');
 
         $tokens = $this->getTokensFromCache();
-        if ($tokens instanceof \App\Domain\Api\SpotifyTokens) {
+        if ($tokens instanceof SpotifyTokens) {
             $this->setSessionTokens($tokens);
             return true;
         }
@@ -43,7 +42,7 @@ class SpotifyConnectionService
     {
         $tokens = $this->cache->get(
             self::CACHE_TOKENS_KEY,
-            function (ItemInterface $item): \App\Domain\Api\SpotifyTokens {
+            function (ItemInterface $item): SpotifyTokens {
                 $item->expiresAfter(self::CACHE_TOKENS_EXPIRATION);
                 return new SpotifyTokens('fake_access_token', 'fake_refresh_token');
             }
@@ -81,7 +80,7 @@ class SpotifyConnectionService
         $this->cache->delete(self::CACHE_TOKENS_KEY);
         $this->cache->get(
             self::CACHE_TOKENS_KEY,
-            function (ItemInterface $item): \App\Domain\Api\SpotifyTokens {
+            function (ItemInterface $item): SpotifyTokens {
                 $item->expiresAfter(self::CACHE_TOKENS_EXPIRATION);
                 return new SpotifyTokens(
                     accessToken: $this->session->getAccessToken(),

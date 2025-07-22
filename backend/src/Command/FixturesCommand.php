@@ -33,7 +33,7 @@ class FixturesCommand
             description: 'Number of listenings to generate. Default is 100.',
             name: 'count',
             shortcut: 'c',
-            suggestedValues: [100, 500, 1000, 5000, 10000],
+            suggestedValues: ['100', '500', '1000', '5000', '10000'],
         )]
         int $count = 100,
     ): int {
@@ -41,16 +41,19 @@ class FixturesCommand
 
         // Generate artists
         $io->section('Generating Artists');
+        
         $artists = $this->generateArtists();
         $io->success(sprintf('Generated %d artists', count($artists)));
 
         // Generate playlists
         $io->section('Generating Playlists');
+        
         $playlists = $this->generatePlaylists();
         $io->success(sprintf('Generated %d playlists', count($playlists)));
 
         // Generate tracks
         $io->section('Generating Tracks');
+        
         $tracks = $this->generateTracks($artists);
         $io->success(sprintf('Generated %d tracks', count($tracks)));
 
@@ -106,13 +109,13 @@ class FixturesCommand
         $playlistsData = [
             ['id' => '0068lzo1xXa9ED8ThypHU1', 'name' => 'Got You On My Mind'],
             ['id' => '00CohVTIAro42OEyH1crVW', 'name' => 'Somewhere Close To Heaven'],
-            ['id' => '00Gbi2ytn6ZmA1ObVcPT93', 'name' => 'Pixie\'s Parasol'],
+            ['id' => '00Gbi2ytn6ZmA1ObVcPT93', 'name' => "Pixie's Parasol"],
             ['id' => '00HNi1t5MKe1UgQYkBd2BS', 'name' => 'Best Things'],
             ['id' => '00V8KJuZ0a089fa25Lc9t7', 'name' => 'Fine By Me'],
             ['id' => '00Xs2BB5Akxl0p0JPwlEDg', 'name' => 'Shoe Fits'],
             ['id' => '00aWZjvNgFOUcs9FaAzcVy', 'name' => 'More Than You Know - Hardstyle Remix'],
             ['id' => '00i7NDZA5Yp8i1aBC5zvPI', 'name' => 'We Just Gotta (Get Together)'],
-            ['id' => '00lNx0OcTJrS3MKHcB80HY', 'name' => 'You Don\'t Know Me - Radio Edit'],
+            ['id' => '00lNx0OcTJrS3MKHcB80HY', 'name' => "You Don't Know Me - Radio Edit"],
             ['id' => '00vY0JBNlplMF3fg4aJgRM', 'name' => 'frame it'],
             ['id' => '00wCGmXuBzQCefa6khtSmp', 'name' => 'Danza 2020 - Live'],
             ['id' => '0110a0AM2nOV8yYa9u6kjQ', 'name' => 'Love Me Like a Friend'],
@@ -170,7 +173,7 @@ class FixturesCommand
             ['id' => '32OlwWuMpZ6b0aN2RZOeMS', 'name' => 'Someone Like You', 'artist_indices' => [11]],
             ['id' => '11dFghVXANMlKmJXsNCbNl', 'name' => 'Here Comes the Sun', 'artist_indices' => [12]],
             ['id' => '6RUKPb4LETWmmr3iAEQktW', 'name' => 'Bohemian Rhapsody', 'artist_indices' => [3]],
-            ['id' => '4u7EnebtmKWzUH433cf5Qv', 'name' => 'Don\'t Stop Me Now', 'artist_indices' => [3]],
+            ['id' => '4u7EnebtmKWzUH433cf5Qv', 'name' => "Don't Stop Me Now", 'artist_indices' => [3]],
             ['id' => '39shCrLaLEUFZvXtNAu8zF', 'name' => 'We Will Rock You', 'artist_indices' => [3]],
             ['id' => '3AJwUDP919kvQ9QcozQPxg', 'name' => 'Lose Yourself', 'artist_indices' => [9]],
             ['id' => '561jH07mF1jHuk7KlaeF0s', 'name' => 'The Real Slim Shady', 'artist_indices' => [9]],
@@ -186,7 +189,7 @@ class FixturesCommand
             ['id' => '0DiWol3AO6WpXZgp0goxAV', 'name' => 'Get Lucky', 'artist_indices' => [4]],
             ['id' => '6QSpuOTqJsmuDPnLih1ILq', 'name' => 'Instant Crush', 'artist_indices' => [4]],
             ['id' => '4Zb4pGNTALJ0evn6qlXOCh', 'name' => 'Harder Better Faster Stronger', 'artist_indices' => [4]],
-            ['id' => '1je1IMUlBXcx1P8zbZcyFE', 'name' => 'God\'s Plan', 'artist_indices' => [2]],
+            ['id' => '1je1IMUlBXcx1P8zbZcyFE', 'name' => "God's Plan", 'artist_indices' => [2]],
             ['id' => '7KXjTSCq5nL1LoYtL7XAwS', 'name' => 'Hotline Bling', 'artist_indices' => [2]],
             ['id' => '0wwPcA6wtMf6HUMpIRdeP7', 'name' => 'One Dance', 'artist_indices' => [2]],
             ['id' => '7fzVpLZbgBV1R3Y8LePRRm', 'name' => 'In My Feelings', 'artist_indices' => [2]],
@@ -218,7 +221,6 @@ class FixturesCommand
     /**
      * @param Track[] $tracks
      * @param Playlist[] $playlists
-     * @param int $count
      * @throws RandomException
      * @throws \DateMalformedStringException
      */
@@ -232,7 +234,7 @@ class FixturesCommand
         $startTimestamp = $oneMonthAgo->getTimestamp();
         $endTimestamp = $tenMinutesAgo->getTimestamp();
 
-        for ($i = 0; $i < $count; $i++) {
+        for ($i = 0; $i < $count; ++$i) {
             // Generate random timestamp between one month ago and 10 minutes ago
             $randomTimestamp = random_int($startTimestamp, $endTimestamp);
             $listeningTime = new \DateTimeImmutable()->setTimestamp($randomTimestamp);
@@ -263,7 +265,7 @@ class FixturesCommand
         $weights = [];
         $totalTracks = count($tracks);
 
-        for ($i = 0; $i < $totalTracks; $i++) {
+        for ($i = 0; $i < $totalTracks; ++$i) {
             // Popular tracks (first 10) get higher weight
             if ($i < 10) {
                 $weights[$i] = 5;
