@@ -42,6 +42,9 @@ scheduler_debug:
 
 spotify_tracker_start: messenger_consume
 
+console *args='':
+    {{PHP}} {{args}}
+
 cache_clear:
     {{PHP}} cache:clear
 
@@ -51,13 +54,10 @@ cache_warmup: cache_clear
 migration_new:
     {{PHP}} doctrine:migrations:generate
 
-migration_make:
-    {{PHP}} make:migration
-
 migration_list:
     {{PHP}} doctrine:migrations:status
 
-migration_apply: docker_up
+migration_apply:
     {{PHP}} doctrine:migrations:migrate --no-interaction
 
 fixtures options='-c 100':
@@ -85,7 +85,7 @@ docker_build_publish:
     docker buildx build --platform linux/arm64 -t lukamrt/spotify-tracker-scheduler --push .
 
 phpstan:
-    vendor/bin/phpstan analyse -c phpstan.neon
+    vendor/bin/phpstan analyse -c phpstan.neon --memory-limit 1G
 
 rector:
     vendor/bin/rector process

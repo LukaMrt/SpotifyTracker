@@ -7,13 +7,23 @@ services:
         bind:
             $adminEmailAddress: '%env(MAIL_ADMIN)%'
             $spotifyCode: '%env(SPOTIFY_CODE)%'
+            $environment: '%kernel.environment%'
 
     App\:
         resource: '../src/'
         exclude:
-            - '../src/DependencyInjection/'
-            - '../src/Entity/'
+            - '../src/Domain/Spotify/Entity/'
             - '../src/Kernel.php'
+
+    # Argument Resolvers for automatic parameter binding
+    App\Infrastructure\ArgumentResolver\DateTimeImmutableValueResolver:
+        tags: ['controller.argument_value_resolver']
+
+    App\Infrastructure\ArgumentResolver\SpotifyIdValueResolver:
+        tags: ['controller.argument_value_resolver']
+
+    App\Infrastructure\ArgumentResolver\SpotifyIdArrayValueResolver:
+        tags: ['controller.argument_value_resolver']
 
     Symfony\Component\Cache\Adapter\AdapterInterface:
         class: Symfony\Component\Cache\Adapter\DoctrineDbalAdapter

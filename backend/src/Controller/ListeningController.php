@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Domain\Spotify\Entity\Listening;
 use App\Domain\Spotify\Entity\SpotifyId;
 use App\Domain\Spotify\Repository\ListeningRepositoryInterface;
+use App\Infrastructure\Repository\ListeningMysqlRepository;
+use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
+#[OA\Tag(name: 'Listenings', description: 'Operations related to music listening data')]
 class ListeningController extends AbstractController
 {
     public function __construct(
@@ -20,295 +21,324 @@ class ListeningController extends AbstractController
     ) {
     }
 
-    #[Route('/api/listenings', name: 'api_listenings_list', methods: [Request::METHOD_GET])]
-    public function list(Request $request): JsonResponse
-    {
-        try {
-            $startDate = $this->parseDate($request->query->get('start_date'));
-            $endDate = $this->parseDate($request->query->get('end_date'));
+    #[Route('/api/listenings', name: 'api_listeningsapi_listenings_list', methods: ['GET'])]
+    #[OA\Get(
+        path: '/api/listenings',
+        description: 'Get listening records filtered by date range and optionally by playlist, artist, or track',
+        summary: 'Retrieve listenings between two dates'
+    )]
+    #[OA\Parameter(
+        name: 'start_date',
+        description: 'Start date in YYYY-MM-DD format',
+        in: 'query',
+        required: true,
+        schema: new OA\Schema(type: 'string', format: 'date', example: '2025-01-01')
+    )]
+    #[OA\Parameter(
+        name: 'end_date',
+        description: 'End date in YYYY-MM-DD format',
+        in: 'query',
+        required: true,
+        schema: new OA\Schema(type: 'string', format: 'date', example: '2025-01-31')
+    )]
+    #[OA\Parameter(
+        name: 'playlist_id',
+        description: 'Filter by specific playlist ID',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', example: 'abc123def456')
+    )]
+    #[OA\Parameter(
+        name: 'artist_id',
+        description: 'Filter by specific artist ID',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', example: 'artist123')
+    )]
+    #[OA\Parameter(
+        name: 'track_id',
+        description: 'Filter by specific track ID',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', example: 'track456')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'Successful response with listening data',
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: 'count', type: 'integer', example: 42),
+            ]
+        )
+    )]
+    public function list(
+        \DateTimeImmutable $startDate,
+        \DateTimeImmutable $endDate,
+        ?SpotifyId $playlistId = null,
+        ?SpotifyId $artistId = null,
+        ?SpotifyId $trackId = null,
+    ): JsonResponse {
+        $listenings = $this->listeningRepository->findByDateRange(
+            $startDate,
+            $endDate,
+            $playlistId,
+            $artistId,
+            $trackId
+        );
 
-            if (!$startDate instanceof \DateTimeImmutable || !$endDate instanceof \DateTimeImmutable) {
-                return $this->json([
-                    'error' => 'Both start_date and end_date are required in YYYY-MM-DD format'
-                ], Response::HTTP_BAD_REQUEST);
-            }
-
-            $playlistIdParam = $request->query->get('playlist_id');
-            $playlistId = $playlistIdParam !== null ? new SpotifyId($playlistIdParam) : null;
-
-            $artistIdParam = $request->query->get('artist_id');
-            $artistId = $artistIdParam !== null ? new SpotifyId($artistIdParam) : null;
-
-            $trackIdParam = $request->query->get('track_id');
-            $trackId = $trackIdParam !== null ? new SpotifyId($trackIdParam) : null;
-
-            $listenings = $this->listeningRepository->findByDateRange(
-                $startDate,
-                $endDate,
-                $playlistId,
-                $artistId,
-                $trackId
-            );
-
-            return $this->json([
-                'data' => array_map([$this, 'serializeListening'], $listenings),
-                'count' => count($listenings),
-                'filters' => [
-                    'start_date' => $startDate->format('Y-m-d'),
-                    'end_date' => $endDate->format('Y-m-d'),
-                    'playlist_id' => $playlistId?->id,
-                    'artist_id' => $artistId?->id,
-                    'track_id' => $trackId?->id,
-                ]
-            ]);
-
-        } catch (\Exception $exception) {
-            return $this->json([
-                'error' => 'An error occurred while retrieving listenings: ' . $exception->getMessage()
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    #[Route('/api/listenings/stats/artists', name: 'api_listenings_stats_artists', methods: [Request::METHOD_GET])]
-    public function artistStats(Request $request): JsonResponse
-    {
-        try {
-            $startDate = $this->parseDate($request->query->get('start_date'));
-            $endDate = $this->parseDate($request->query->get('end_date'));
-
-            if (!$startDate instanceof \DateTimeImmutable || !$endDate instanceof \DateTimeImmutable) {
-                return $this->json([
-                    'error' => 'Both start_date and end_date are required in YYYY-MM-DD format'
-                ], Response::HTTP_BAD_REQUEST);
-            }
-
-            $artistIds = $this->parseSpotifyIdArrayParameter($request->query->get('artist_ids'));
-
-            $stats = $this->listeningRepository->getArtistStats(
-                $startDate,
-                $endDate,
-                $artistIds
-            );
-
-            return $this->json([
-                'data' => $stats,
-                'total_artists' => count($stats),
-                'total_listenings' => array_sum($stats),
-                'period' => [
-                    'start_date' => $startDate->format('Y-m-d'),
-                    'end_date' => $endDate->format('Y-m-d'),
-                ],
-                'filters' => [
-                    'artist_ids' => array_map(fn(SpotifyId $id): string => $id->id, $artistIds),
-                ]
-            ]);
-
-        } catch (\Exception $exception) {
-            return $this->json([
-                'error' => 'An error occurred while retrieving artist statistics: ' . $exception->getMessage()
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    #[Route('/api/listenings/stats/tracks', name: 'api_listenings_stats_tracks', methods: [Request::METHOD_GET])]
-    public function trackStats(Request $request): JsonResponse
-    {
-        try {
-            $startDate = $this->parseDate($request->query->get('start_date'));
-            $endDate = $this->parseDate($request->query->get('end_date'));
-
-            if (!$startDate instanceof \DateTimeImmutable || !$endDate instanceof \DateTimeImmutable) {
-                return $this->json([
-                    'error' => 'Both start_date and end_date are required in YYYY-MM-DD format'
-                ], Response::HTTP_BAD_REQUEST);
-            }
-
-            $trackIds = $this->parseSpotifyIdArrayParameter($request->query->get('track_ids'));
-
-            $stats = $this->listeningRepository->getTrackStats(
-                $startDate,
-                $endDate,
-                $trackIds
-            );
-
-            return $this->json([
-                'data' => $stats,
-                'total_tracks' => count($stats),
-                'total_listenings' => array_sum($stats),
-                'period' => [
-                    'start_date' => $startDate->format('Y-m-d'),
-                    'end_date' => $endDate->format('Y-m-d'),
-                ],
-                'filters' => [
-                    'track_ids' => array_map(fn(SpotifyId $id): string => $id->id, $trackIds),
-                ]
-            ]);
-
-        } catch (\Exception $exception) {
-            return $this->json([
-                'error' => 'An error occurred while retrieving track statistics: ' . $exception->getMessage()
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    #[Route('/api/listenings/stats/playlists', name: 'api_listenings_stats_playlists', methods: [Request::METHOD_GET])]
-    public function playlistStats(Request $request): JsonResponse
-    {
-        try {
-            $startDate = $this->parseDate($request->query->get('start_date'));
-            $endDate = $this->parseDate($request->query->get('end_date'));
-
-            if (!$startDate instanceof \DateTimeImmutable || !$endDate instanceof \DateTimeImmutable) {
-                return $this->json([
-                    'error' => 'Both start_date and end_date are required in YYYY-MM-DD format'
-                ], Response::HTTP_BAD_REQUEST);
-            }
-
-            $playlistIds = $this->parseSpotifyIdArrayParameter($request->query->get('playlist_ids'));
-
-            $stats = $this->listeningRepository->getPlaylistStats(
-                $startDate,
-                $endDate,
-                $playlistIds
-            );
-
-            return $this->json([
-                'data' => $stats,
-                'total_playlists' => count($stats),
-                'total_listenings' => array_sum($stats),
-                'period' => [
-                    'start_date' => $startDate->format('Y-m-d'),
-                    'end_date' => $endDate->format('Y-m-d'),
-                ],
-                'filters' => [
-                    'playlist_ids' => array_map(fn(SpotifyId $id): string => $id->id, $playlistIds),
-                ]
-            ]);
-
-        } catch (\Exception $exception) {
-            return $this->json([
-                'error' => 'An error occurred while retrieving playlist statistics: ' . $exception->getMessage()
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    #[Route('/api/listenings/stats/summary', name: 'api_listenings_stats_summary', methods: [Request::METHOD_GET])]
-    public function statsSummary(Request $request): JsonResponse
-    {
-        try {
-            $startDate = $this->parseDate($request->query->get('start_date'));
-            $endDate = $this->parseDate($request->query->get('end_date'));
-
-            if (!$startDate instanceof \DateTimeImmutable || !$endDate instanceof \DateTimeImmutable) {
-                return $this->json([
-                    'error' => 'Both start_date and end_date are required in YYYY-MM-DD format'
-                ], Response::HTTP_BAD_REQUEST);
-            }
-
-            // Get top 10 for each category
-            $artistStats = $this->listeningRepository->getArtistStats($startDate, $endDate, []);
-            $trackStats = $this->listeningRepository->getTrackStats($startDate, $endDate, []);
-            $playlistStats = $this->listeningRepository->getPlaylistStats($startDate, $endDate, []);
-
-            // Limit to top 10 for summary
-            $topArtists = array_slice($artistStats, 0, 10, true);
-            $topTracks = array_slice($trackStats, 0, 10, true);
-            $topPlaylists = array_slice($playlistStats, 0, 10, true);
-
-            return $this->json([
-                'period' => [
-                    'start_date' => $startDate->format('Y-m-d'),
-                    'end_date' => $endDate->format('Y-m-d'),
-                ],
-                'summary' => [
-                    'total_listenings' => array_sum($artistStats), // Total from artists (most accurate)
-                    'unique_artists' => count($artistStats),
-                    'unique_tracks' => count($trackStats),
-                    'unique_playlists' => count($playlistStats),
-                ],
-                'top_artists' => $topArtists,
-                'top_tracks' => $topTracks,
-                'top_playlists' => $topPlaylists,
-            ]);
-
-        } catch (\Exception $exception) {
-            return $this->json([
-                'error' => 'An error occurred while retrieving summary statistics: ' . $exception->getMessage()
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    private function parseDate(?string $dateString): ?\DateTimeImmutable
-    {
-        if ($dateString === null) {
-            return null;
-        }
-
-        try {
-            return new \DateTimeImmutable($dateString);
-        } catch (\Exception) {
-            return null;
-        }
+        return $this->json(['count' => count($listenings)]);
     }
 
     /**
-     * @return string[]
+     * @param SpotifyId[] $artistIds
      */
-    private function parseArrayParameter(?string $parameter): array
-    {
-        if ($parameter === null) {
-            return [];
-        }
+    #[Route('/api/listenings/stats/artists', name: 'api_listeningsapi_listenings_stats_artists', methods: ['GET'])]
+    #[OA\Get(
+        path: '/api/listenings/stats/artists',
+        description: 'Retrieve listening statistics for artists within a date range, optionally filtered by specific artist IDs',
+        summary: 'Get artist listening statistics'
+    )]
+    #[OA\Parameter(
+        name: 'start_date',
+        description: 'Start date in YYYY-MM-DD format',
+        in: 'query',
+        required: true,
+        schema: new OA\Schema(type: 'string', format: 'date', example: '2025-01-01')
+    )]
+    #[OA\Parameter(
+        name: 'end_date',
+        description: 'End date in YYYY-MM-DD format',
+        in: 'query',
+        required: true,
+        schema: new OA\Schema(type: 'string', format: 'date', example: '2025-01-31')
+    )]
+    #[OA\Parameter(
+        name: 'artist_ids',
+        description: 'Comma-separated list of artist IDs to filter by (optional)',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', example: 'artist1,artist2,artist3')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'Artist statistics',
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: 'data', type: 'object', example: ['Artist Name' => 42, 'Another Artist' => 25], additionalProperties: new OA\AdditionalProperties(type: 'integer')),
+                new OA\Property(property: 'total_artists', type: 'integer', example: 10),
+                new OA\Property(property: 'total_listenings', type: 'integer', example: 150),
+                new OA\Property(property: 'period', properties: [
+                    new OA\Property(property: 'start_date', type: 'string', format: 'date'),
+                    new OA\Property(property: 'end_date', type: 'string', format: 'date')
+                ], type: 'object'),
+                new OA\Property(property: 'filters', properties: [
+                    new OA\Property(property: 'artist_ids', type: 'array', items: new OA\Items(type: 'string'))
+                ], type: 'object')
+            ]
+        )
+    )]
+    public function artistStats(
+        \DateTimeImmutable $startDate,
+        \DateTimeImmutable $endDate,
+        array $artistIds = []
+    ): JsonResponse {
+        $stats = $this->listeningRepository->getArtistStats(
+            $startDate,
+            $endDate,
+            $artistIds
+        );
 
-        // Support both comma-separated values and JSON arrays
-        if (str_starts_with(trim($parameter), '[')) {
-            $decoded = json_decode($parameter, true);
-            if (!is_array($decoded)) {
-                return [];
-            }
-            
-            // Ensure we return an array of strings
-            return array_filter($decoded, fn($value): bool => is_string($value));
-        }
-
-        return array_filter(array_map('trim', explode(',', $parameter)), fn(string $value): bool => $value !== '');
+        return $this->json(['data' => $stats]);
     }
 
     /**
-     * @return SpotifyId[]
+     * @param SpotifyId[] $trackIds
      */
-    private function parseSpotifyIdArrayParameter(?string $parameter): array
-    {
-        $stringIds = $this->parseArrayParameter($parameter);
-        return array_map(fn(string $id): SpotifyId => new SpotifyId($id), $stringIds);
+    #[Route('/api/listenings/stats/tracks', name: 'api_listeningsapi_listenings_stats_tracks', methods: ['GET'])]
+    #[OA\Get(
+        path: '/api/listenings/stats/tracks',
+        description: 'Retrieve listening statistics for tracks within a date range, optionally filtered by specific track IDs',
+        summary: 'Get track listening statistics'
+    )]
+    #[OA\Parameter(
+        name: 'start_date',
+        description: 'Start date in YYYY-MM-DD format',
+        in: 'query',
+        required: true,
+        schema: new OA\Schema(type: 'string', format: 'date', example: '2025-01-01')
+    )]
+    #[OA\Parameter(
+        name: 'end_date',
+        description: 'End date in YYYY-MM-DD format',
+        in: 'query',
+        required: true,
+        schema: new OA\Schema(type: 'string', format: 'date', example: '2025-01-31')
+    )]
+    #[OA\Parameter(
+        name: 'track_ids',
+        description: 'Comma-separated list of track IDs to filter by (optional)',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', example: 'track1,track2,track3')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'Track statistics',
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: 'data', type: 'object', example: ['Track Name' => 15, 'Another Track' => 8], additionalProperties: new OA\AdditionalProperties(type: 'integer')),
+                new OA\Property(property: 'total_tracks', type: 'integer', example: 5),
+                new OA\Property(property: 'total_listenings', type: 'integer', example: 50),
+                new OA\Property(property: 'period', properties: [
+                    new OA\Property(property: 'start_date', type: 'string', format: 'date'),
+                    new OA\Property(property: 'end_date', type: 'string', format: 'date')
+                ], type: 'object'),
+                new OA\Property(property: 'filters', properties: [
+                    new OA\Property(property: 'track_ids', type: 'array', items: new OA\Items(type: 'string'))
+                ], type: 'object')
+            ]
+        )
+    )]
+    public function trackStats(
+        \DateTimeImmutable $startDate,
+        \DateTimeImmutable $endDate,
+        array $trackIds = []
+    ): JsonResponse {
+        $stats = $this->listeningRepository->getTrackStats(
+            $startDate,
+            $endDate,
+            $trackIds
+        );
+
+        return $this->json(['data' => $stats]);
     }
 
     /**
-     * @return array<string, mixed>
+     * @param SpotifyId[] $playlistIds
      */
-    private function serializeListening(Listening $listening): array
-    {
-        $artists = array_map(fn($artist): array => [
-            'id' => $artist->getId()->id,
-            'name' => $artist->getName(),
-        ], $listening->getTrack()->getArtists());
+    #[Route('/api/listenings/stats/playlists', name: 'api_listeningsapi_listenings_stats_playlists', methods: ['GET'])]
+    #[OA\Get(
+        path: '/api/listenings/stats/playlists',
+        description: 'Retrieve listening statistics for playlists within a date range, optionally filtered by specific playlist IDs',
+        summary: 'Get playlist listening statistics'
+    )]
+    #[OA\Parameter(
+        name: 'start_date',
+        description: 'Start date in YYYY-MM-DD format',
+        in: 'query',
+        required: true,
+        schema: new OA\Schema(type: 'string', format: 'date', example: '2025-01-01')
+    )]
+    #[OA\Parameter(
+        name: 'end_date',
+        description: 'End date in YYYY-MM-DD format',
+        in: 'query',
+        required: true,
+        schema: new OA\Schema(type: 'string', format: 'date', example: '2025-01-31')
+    )]
+    #[OA\Parameter(
+        name: 'playlist_ids',
+        description: 'Comma-separated list of playlist IDs to filter by (optional)',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', example: 'playlist1,playlist2,playlist3')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'Playlist statistics',
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: 'data', type: 'object', example: ['My Playlist' => 30, 'Another Playlist' => 12], additionalProperties: new OA\AdditionalProperties(type: 'integer')),
+                new OA\Property(property: 'total_playlists', type: 'integer', example: 3),
+                new OA\Property(property: 'total_listenings', type: 'integer', example: 75),
+                new OA\Property(property: 'period', properties: [
+                    new OA\Property(property: 'start_date', type: 'string', format: 'date'),
+                    new OA\Property(property: 'end_date', type: 'string', format: 'date')
+                ], type: 'object'),
+                new OA\Property(property: 'filters', properties: [
+                    new OA\Property(property: 'playlist_ids', type: 'array', items: new OA\Items(type: 'string'))
+                ], type: 'object')
+            ]
+        )
+    )]
+    public function playlistStats(
+        \DateTimeImmutable $startDate,
+        \DateTimeImmutable $endDate,
+        array $playlistIds = []
+    ): JsonResponse {
+        $stats = $this->listeningRepository->getPlaylistStats(
+            $startDate,
+            $endDate,
+            $playlistIds
+        );
 
-        $playlist = null;
-        if ($listening->getPlaylist() instanceof \App\Domain\Spotify\Entity\Playlist) {
-            $playlist = [
-                'id' => $listening->getPlaylist()->getId()->id,
-                'name' => $listening->getPlaylist()->getName(),
-            ];
-        }
+        return $this->json(['data' => $stats]);
+    }
 
-        return [
-            'date_time' => $listening->getDateTime()->format('Y-m-d H:i:s'),
-            'track' => [
-                'id' => $listening->getTrack()->getId()->id,
-                'name' => $listening->getTrack()->getName(),
-                'artists' => $artists,
+    #[Route('/api/listenings/stats/summary', name: 'api_listeningsapi_listenings_stats_summary', methods: ['GET'])]
+    #[OA\Get(
+        path: '/api/listenings/stats/summary',
+        description: 'Retrieve a comprehensive summary of listening statistics including top artists, tracks, and playlists',
+        summary: 'Get listening statistics summary'
+    )]
+    #[OA\Parameter(
+        name: 'start_date',
+        description: 'Start date in YYYY-MM-DD format',
+        in: 'query',
+        required: true,
+        schema: new OA\Schema(type: 'string', format: 'date', example: '2025-01-01')
+    )]
+    #[OA\Parameter(
+        name: 'end_date',
+        description: 'End date in YYYY-MM-DD format',
+        in: 'query',
+        required: true,
+        schema: new OA\Schema(type: 'string', format: 'date', example: '2025-01-31')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'Summary statistics',
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: 'period', properties: [
+                    new OA\Property(property: 'start_date', type: 'string', format: 'date'),
+                    new OA\Property(property: 'end_date', type: 'string', format: 'date')
+                ], type: 'object'),
+                new OA\Property(property: 'summary', properties: [
+                    new OA\Property(property: 'total_listenings', type: 'integer', example: 500),
+                    new OA\Property(property: 'unique_artists', type: 'integer', example: 25),
+                    new OA\Property(property: 'unique_tracks', type: 'integer', example: 150),
+                    new OA\Property(property: 'unique_playlists', type: 'integer', example: 10)
+                ], type: 'object'),
+                new OA\Property(property: 'top_artists', type: 'object', additionalProperties: new OA\AdditionalProperties(type: 'integer')),
+                new OA\Property(property: 'top_tracks', type: 'object', additionalProperties: new OA\AdditionalProperties(type: 'integer')),
+                new OA\Property(property: 'top_playlists', type: 'object', additionalProperties: new OA\AdditionalProperties(type: 'integer'))
+            ]
+        )
+    )]
+    public function statsSummary(
+        \DateTimeImmutable $startDate,
+        \DateTimeImmutable $endDate
+    ): JsonResponse {
+        $artistStats = $this->listeningRepository->getArtistStats($startDate, $endDate, []);
+        $trackStats = $this->listeningRepository->getTrackStats($startDate, $endDate, []);
+        $playlistStats = $this->listeningRepository->getPlaylistStats($startDate, $endDate, []);
+
+        // Limit to top 10 for summary
+        $topArtists = array_slice($artistStats, 0, 10, true);
+        $topTracks = array_slice($trackStats, 0, 10, true);
+        $topPlaylists = array_slice($playlistStats, 0, 10, true);
+
+        return $this->json([
+            'summary' => [
+                'total_listenings_minutes' => array_sum($artistStats) * 2, // Total from artists (most accurate)
+                'unique_artists' => count($artistStats) === ListeningMysqlRepository::MAX_STATS_LIMIT ? -1 : count($artistStats),
+                'unique_tracks' => count($trackStats) === ListeningMysqlRepository::MAX_STATS_LIMIT ? -1 : count($trackStats),
+                'unique_playlists' => count($playlistStats) === ListeningMysqlRepository::MAX_STATS_LIMIT ? -1 : count($playlistStats),
             ],
-            'playlist' => $playlist,
-        ];
+            'top_artists' => $topArtists,
+            'top_tracks' => $topTracks,
+            'top_playlists' => $topPlaylists,
+        ]);
     }
 }

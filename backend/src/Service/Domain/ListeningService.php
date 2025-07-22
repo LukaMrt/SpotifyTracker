@@ -132,5 +132,7 @@ class ListeningService
                 'code' => $throwable->getCode(),
             ]);
         }
+
+        throw $throwable;
     }
 }

@@ -73,7 +73,7 @@ class FixturesCommand
     private function generateArtists(): array
     {
         $artistsData = [
-            ['id' => '0WqprkdDf9jCcdViOJGn6', 'name' => 'Carston'],
+            ['id' => '0WqprkdDf9jCcdViOJGn68', 'name' => 'Carston'],
             ['id' => '2vOzV5WdvOYH3K1NJyt7wb', 'name' => 'Horizon Blue'],
             ['id' => '0bmxU94V20pNJ2Vie9kFYv', 'name' => 'Rea Garvey'],
             ['id' => '7jLSEPYCYQ5ssWU3BICqrW', 'name' => 'Picture This'],
@@ -81,11 +81,11 @@ class FixturesCommand
             ['id' => '2b6gc4EVpO6OTlDvKrK852', 'name' => 'Lucky Chops'],
             ['id' => '2oX42qP5ineK3hrhBECLmj', 'name' => 'Andy Grammer'],
             ['id' => '0p3tzEAt0XWrBqbrwBoN1I', 'name' => 'Kyle Hume'],
-            ['id' => '4DzXj2bn9ivDSjvJVSKL4x7', 'name' => 'Luca Testa'],
+            ['id' => '4DzXj2bn9ivDSjvJVSKL4x', 'name' => 'Luca Testa'],
             ['id' => '297i2RtGGQqofyuggOlE2l', 'name' => 'RYU & DANTE'],
             ['id' => '6LMPsablHHtwkl0myzVCgW', 'name' => 'Andrea Toscano'],
             ['id' => '1TPxbrTvRteumxJJMjg302', 'name' => 'Wanda Shakes'],
-            ['id' => '4F6nLjcaBED8qUel8bBx6Cr', 'name' => 'Jax Jones'],
+            ['id' => '4F6nLjcaBED8qUel8bBx6C', 'name' => 'Jax Jones'],
             ['id' => '5KKpBU5eC2tJDzf0wmlRp2', 'name' => 'RAYE'],
             ['id' => '3WrFJ7ztbogyGnTHbHJFl2', 'name' => 'The Beatles'],
         ];

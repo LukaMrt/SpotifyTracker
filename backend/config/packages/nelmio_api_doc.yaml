@@ -1,0 +1,17 @@
+nelmio_api_doc:
+    documentation:
+        info:
+            title: Spotify Tracker API
+            description: API for tracking and analyzing Spotify listening history
+            version: 1.0.0
+        servers:
+            - url: http://localhost:8000
+              description: Development server
+        components:
+            securitySchemes:
+                bearerAuth:
+                    type: http
+                    scheme: bearer
+    areas: # to filter documented areas
+        path_patterns:
+            - ^/api(?!/doc$) # Accepts routes under /api except /api/doc

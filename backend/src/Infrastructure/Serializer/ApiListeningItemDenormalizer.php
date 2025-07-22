@@ -26,7 +26,7 @@ class ApiListeningItemDenormalizer implements DenormalizerInterface
     public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): ApiListeningItem
     {
         $artists = array_map(
-            static fn (array $artistData): \App\Domain\Spotify\Api\ApiArtist => new ApiArtist(
+            static fn (array $artistData): ApiArtist => new ApiArtist(
                 id: $artistData['id'],
                 name: $artistData['name']
             ),

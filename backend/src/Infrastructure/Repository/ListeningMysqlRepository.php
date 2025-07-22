@@ -11,6 +11,7 @@ use App\Domain\Spotify\Entity\Playlist;
 use App\Domain\Spotify\Entity\SpotifyId;
 use App\Domain\Spotify\Entity\Track;
 use App\Domain\Spotify\Repository\ListeningRepositoryInterface;
+use App\Infrastructure\Serializer\SpotifyIdDenormalizer;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception;
@@ -21,6 +22,8 @@ use Symfony\Component\Serializer\SerializerInterface;
 
 class ListeningMysqlRepository implements ListeningRepositoryInterface
 {
+    public const int MAX_STATS_LIMIT = 100;
+
     public function __construct(
         protected readonly Connection $connection,
         protected readonly LoggerInterface $logger,
@@ -50,8 +53,8 @@ class ListeningMysqlRepository implements ListeningRepositoryInterface
                 ],
                 [
                     'dateTime'    => ParameterType::STRING,
-                    'track_id'    => ParameterType::BINARY,
-                    'playlist_id' => ParameterType::BINARY,
+                    'track_id'    => ParameterType::STRING,
+                    'playlist_id' => ParameterType::STRING,
                 ]
             );
 
@@ -75,7 +78,7 @@ class ListeningMysqlRepository implements ListeningRepositoryInterface
                 'name' => $track->getName(),
             ],
             [
-                'id'   => ParameterType::BINARY,
+                'id'   => ParameterType::STRING,
                 'name' => ParameterType::STRING,
             ]
         );
@@ -98,7 +101,7 @@ class ListeningMysqlRepository implements ListeningRepositoryInterface
                 'name' => $artist->getName(),
             ],
             [
-                'id'   => ParameterType::BINARY,
+                'id'   => ParameterType::STRING,
                 'name' => ParameterType::STRING,
             ]
         );
@@ -113,8 +116,8 @@ class ListeningMysqlRepository implements ListeningRepositoryInterface
                 'artist_id' => $artist->getId(),
             ],
             [
-                'track_id'  => ParameterType::BINARY,
-                'artist_id' => ParameterType::BINARY,
+                'track_id'  => ParameterType::STRING,
+                'artist_id' => ParameterType::STRING,
             ]
         );
     }
@@ -136,7 +139,7 @@ class ListeningMysqlRepository implements ListeningRepositoryInterface
                 'name' => $playlist->getName(),
             ],
             [
-                'id'   => ParameterType::BINARY,
+                'id'   => ParameterType::STRING,
                 'name' => ParameterType::STRING,
             ]
         );
@@ -184,11 +187,11 @@ class ListeningMysqlRepository implements ListeningRepositoryInterface
                 SELECT JSON_OBJECT(
                     'dateTime', listening.dateTime,
                     'track', JSON_OBJECT(
-                        'id', track.id,
+                        'id', HEX(track.id),
                         'name', track.name,
                         'artists', JSON_ARRAYAGG(
                             JSON_OBJECT(
-                                'id', artist.id,
+                                'id',  HEX(artist.id),
                                 'name', artist.name
                             )
                         )
@@ -197,7 +200,7 @@ class ListeningMysqlRepository implements ListeningRepositoryInterface
                         playlist.id IS NULL,
                         NULL,
                         JSON_OBJECT(
-                            'id', playlist.id,
+                            'id', HEX(playlist.id),
                             'name', playlist.name
                         )
                     )
@@ -221,6 +224,7 @@ class ListeningMysqlRepository implements ListeningRepositoryInterface
                 $row['listening'],
                 Listening::class,
                 'json',
+                [SpotifyIdDenormalizer::FROM_MYSQL_FLAG => true]
             ),
             $result,
         );
@@ -315,10 +319,12 @@ class ListeningMysqlRepository implements ListeningRepositoryInterface
         $params = [
             'startDate' => $startDate->format('Y-m-d H:i:s'),
             'endDate' => $endDate->format('Y-m-d H:i:s'),
+            'limit' => self::MAX_STATS_LIMIT,
         ];
         $types = [
             'startDate' => ParameterType::STRING,
             'endDate' => ParameterType::STRING,
+            'limit' => ParameterType::INTEGER,
         ];
 
         if ($entityIds !== []) {
@@ -338,6 +344,7 @@ class ListeningMysqlRepository implements ListeningRepositoryInterface
                 {$where}
                 GROUP BY {$entityName}.id, {$entityName}.name
                 ORDER BY COUNT(*) DESC
+                LIMIT :limit
         SQL,
             $params,
             $types
