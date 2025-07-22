@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Command;
 
-use App\Service\SpotifyConnectionService;
+use App\Service\Infrastructure\SpotifyConnectionService;
 use SpotifyWebAPI\Session;
 use Symfony\Component\Console\Attribute\Argument;
 use Symfony\Component\Console\Attribute\AsCommand;

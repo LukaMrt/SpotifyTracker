@@ -22,7 +22,13 @@ composer_install:
 composer_update:
     composer update
 
+composer *args='':
+    composer {{args}}
+
 messenger_consume: docker_up
+    {{PHP}} messenger:consume --all {{MESSENGER_VERBOSITY}}
+
+messenger_consume_dev:
     {{PHP}} messenger:consume --all {{MESSENGER_VERBOSITY}}
 
 messenger_debug:

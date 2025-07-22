@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Service;
+namespace App\Service\Infrastructure;
 
 use App\Domain\Spotify\Api\SpotifyTokens;
 use Psr\Log\LoggerInterface;

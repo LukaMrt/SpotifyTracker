@@ -4,15 +4,13 @@ declare(strict_types=1);
 
 namespace App\Task;
 
-use App\Service\ListeningService;
+use App\Service\Domain\ListeningService;
 use Symfony\Component\Scheduler\Attribute\AsPeriodicTask;
 
 #[AsPeriodicTask(frequency: StoreListeningTask::INTERVAL)]
 class StoreListeningTask
 {
-    protected const string INTERVAL = '30 seconds';
-    
-    protected const string TIMEZONE = 'Europe/Paris';
+    protected const string INTERVAL = '5 seconds';
 
     public function __construct(
         protected readonly ListeningService $listeningService,

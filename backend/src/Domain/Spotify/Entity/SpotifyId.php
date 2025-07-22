@@ -25,4 +25,9 @@ class SpotifyId implements \Stringable
     {
         return $other instanceof self && $other->id === $this->id;
     }
+
+    public static function from(string $id): self
+    {
+        return new self($id);
+    }
 }
