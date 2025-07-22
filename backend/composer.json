@@ -7,7 +7,7 @@
         "php": ">=8.3",
         "ext-ctype": "*",
         "ext-iconv": "*",
-        "doctrine/dbal": ">=4.3.0",
+        "doctrine/dbal": ">=4.3.1",
         "doctrine/doctrine-migrations-bundle": ">=3.4.2",
         "doctrine/migrations": ">=3.9.1",
         "jwilsson/spotify-web-api-php": "^6.2",
@@ -87,11 +87,11 @@
     },
     "require-dev": {
         "phpstan/extension-installer": "^1.4.3",
-        "phpstan/phpstan": "^2.1.17",
-        "phpstan/phpstan-deprecation-rules": "^2.0",
-        "phpstan/phpstan-strict-rules": "^2.0",
-        "phpstan/phpstan-symfony": "^2.0.6",
-        "rector/rector": "^2.1",
+        "phpstan/phpstan": "^2.1.19",
+        "phpstan/phpstan-deprecation-rules": "^2.0.3",
+        "phpstan/phpstan-strict-rules": "^2.0.6",
+        "phpstan/phpstan-symfony": "^2.0.7",
+        "rector/rector": "^2.1.2",
         "symfony/maker-bundle": "^1.64.0"
     }
 }
