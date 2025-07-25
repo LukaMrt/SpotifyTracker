@@ -12,4 +12,5 @@
 ###> phpunit/phpunit ###
 /phpunit.xml
 /.phpunit.cache/
+/var/coverage/
 ###< phpunit/phpunit ###

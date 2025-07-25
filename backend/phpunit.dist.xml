@@ -39,6 +39,15 @@
         </deprecationTrigger>
     </source>
 
+    <coverage includeUncoveredFiles="true"
+              ignoreDeprecatedCodeUnits="true"
+              disableCodeCoverageIgnore="false"
+    >
+        <report>
+            <html outputDirectory="var/coverage/html" lowUpperBound="50" highLowerBound="80"/>
+        </report>
+    </coverage>
+
     <extensions>
     </extensions>
 </phpunit>

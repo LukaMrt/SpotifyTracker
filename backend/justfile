@@ -71,23 +71,26 @@ test:
     {{PHP}} cache:clear --env=test
     {{PHP}} doctrine:migrations:migrate --no-interaction --env=test
     {{PHP}} app:fixtures --env=test
-    php vendor/phpunit/phpunit/phpunit
+    php vendor/phpunit/phpunit/phpunit --coverage-html var/coverage/html
 
 test-unit:
-    php vendor/phpunit/phpunit/phpunit --group=unit
+    php vendor/phpunit/phpunit/phpunit --group=unit --coverage-html var/coverage/html
 
 test-e2e:
     just test-setup
     {{PHP}} cache:clear --env=test
     {{PHP}} doctrine:migrations:migrate --no-interaction --env=test
     {{PHP}} app:fixtures --env=test
-    php vendor/phpunit/phpunit/phpunit --group=e2e
+    php vendor/phpunit/phpunit/phpunit --group=e2e --coverage-html var/coverage/html
 
 test-setup:
     @if (docker ps --format "table {{{{.Names}}}}" | Select-String "mysql_test_container") { Write-Host "✓ Test database already running" } else { Write-Host "🚀 Starting test database..."; docker-compose up -d database_test; Write-Host "⏳ Waiting for database to be ready..."; for ($i = 1; $i -le 5; $i++) { Start-Sleep 1; if (docker exec mysql_test_container mysqladmin ping -h localhost --silent 2>$null) { Write-Host "✓ Database is ready!"; break }; Write-Host "   Attempt $i/5..." } }
 
 test-setup-unix:
     @if docker ps --format "table {{{{.Names}}}}" | grep -q "mysql_test_container"; then echo "✓ Test database already running"; else echo "🚀 Starting test database..."; docker-compose up -d database_test; echo "⏳ Waiting for database to be ready..."; for i in {1..5}; do sleep 1; if docker exec mysql_test_container mysqladmin ping -h localhost --silent >/dev/null 2>&1; then echo "✓ Database is ready!"; break; fi; echo "   Attempt $i/5..."; done; fi
+
+coverage-report:
+    @if (Test-Path "var/coverage/html/index.html") { Write-Host "✓ Opening coverage report..."; Start-Process "var/coverage/html/index.html" } else { Write-Host "❌ No coverage report not found. Run tests first." }
 
 analyse:
     just rector
