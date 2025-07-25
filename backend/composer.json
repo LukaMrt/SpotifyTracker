@@ -39,7 +39,8 @@
             "php-http/discovery": true,
             "phpstan/extension-installer": true,
             "symfony/flex": true,
-            "symfony/runtime": true
+            "symfony/runtime": true,
+            "infection/extension-installer": true
         },
         "bump-after-update": true,
         "sort-packages": true
@@ -92,6 +93,7 @@
         }
     },
     "require-dev": {
+        "infection/infection": "^0.30.3",
         "phpstan/extension-installer": "^1.4.3",
         "phpstan/phpstan": "^2.1.19",
         "phpstan/phpstan-deprecation-rules": "^2.0.3",

@@ -6,7 +6,8 @@
       "Bash(just backend test)",
       "Bash(just backend:*)",
       "Bash(just:*)",
-      "Bash(php vendor/phpunit/phpunit/phpunit:*)"
+      "Bash(php vendor/phpunit/phpunit/phpunit:*)",
+      "Bash(composer config:*)"
     ],
     "deny": []
   }

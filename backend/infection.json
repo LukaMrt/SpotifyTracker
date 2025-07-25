@@ -1,0 +1,47 @@
+{
+    "source": {
+        "directories": [
+            "src"
+        ],
+        "excludes": [
+            "src/Kernel.php",
+            "src/Lib"
+        ]
+    },
+    "timeout": 30,
+    "logs": {
+        "text": "var/infection/infection.log",
+        "html": "var/infection/infection.html",
+        "summary": "var/infection/summary.log",
+        "json": "var/infection/infection.json",
+        "perMutator": "var/infection/per-mutator.md"
+    },
+    "tmpDir": "var/infection/temp",
+    "phpUnit": {
+        "configDir": ".",
+        "customPath": "vendor/phpunit/phpunit/phpunit"
+    },
+    "testFramework": "phpunit",
+    "bootstrap": "tests/bootstrap.php",
+    "initialTestsPhpOptions": "-d memory_limit=1G",
+    "testFrameworkOptions": "--testsuite=\"Project Test Suite\"",
+    "minMsi": 85,
+    "minCoveredMsi": 90,
+    "mutators": {
+        "@default": true,
+        "@function_signature": false,
+        "MethodCallRemoval": {
+            "ignore": [
+                "Symfony\\Component\\HttpFoundation\\Response::setStatusCode"
+            ]
+        },
+        "ArrayItemRemoval": false,
+        "FunctionCallRemoval": {
+            "ignore": [
+                "sprintf",
+                "array_slice"
+            ]
+        }
+    },
+    "threads": 4
+}

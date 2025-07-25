@@ -89,6 +89,16 @@ test-setup:
 test-setup-unix:
     @if docker ps --format "table {{{{.Names}}}}" | grep -q "mysql_test_container"; then echo "✓ Test database already running"; else echo "🚀 Starting test database..."; docker-compose up -d database_test; echo "⏳ Waiting for database to be ready..."; for i in {1..5}; do sleep 1; if docker exec mysql_test_container mysqladmin ping -h localhost --silent >/dev/null 2>&1; then echo "✓ Database is ready!"; break; fi; echo "   Attempt $i/5..."; done; fi
 
+mutation:
+    just test-setup
+    {{PHP}} cache:clear --env=test
+    {{PHP}} doctrine:migrations:migrate --no-interaction --env=test
+    {{PHP}} app:fixtures --env=test
+    php vendor/infection/infection/bin/infection --threads=4 --min-msi=80 --min-covered-msi=85
+
+mutation-report:
+    @if (Test-Path "var/infection/infection.html") { Write-Host "✓ Opening mutation testing report..."; Start-Process "var/infection/infection.html" } else { Write-Host "❌ No mutation report found. Run 'just mutation' first." }
+
 coverage-report:
     @if (Test-Path "var/coverage/html/index.html") { Write-Host "✓ Opening coverage report..."; Start-Process "var/coverage/html/index.html" } else { Write-Host "❌ No coverage report not found. Run tests first." }
 

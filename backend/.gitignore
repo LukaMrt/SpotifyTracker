@@ -14,3 +14,7 @@
 /.phpunit.cache/
 /var/coverage/
 ###< phpunit/phpunit ###
+
+###> infection/infection ###
+/var/infection/
+###< infection/infection ###
