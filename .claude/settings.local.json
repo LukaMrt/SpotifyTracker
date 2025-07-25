@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(composer require:*)",
+      "Bash(composer show:*)",
+      "Bash(just backend test)",
+      "Bash(just backend:*)",
+      "Bash(just:*)",
+      "Bash(php vendor/phpunit/phpunit/phpunit:*)"
+    ],
+    "deny": []
+  }
+}

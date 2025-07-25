@@ -11,7 +11,7 @@
         "doctrine/doctrine-migrations-bundle": ">=3.4.2",
         "doctrine/migrations": ">=3.9.1",
         "jwilsson/spotify-web-api-php": "^6.2",
-        "nelmio/api-doc-bundle": "*",
+        "nelmio/api-doc-bundle": ">=5.4",
         "symfony/asset": "7.3.*",
         "symfony/cache": "7.3.*",
         "symfony/console": "7.3.*",
@@ -31,8 +31,8 @@
         "symfony/uid": "7.3.*",
         "symfony/validator": "7.3.*",
         "symfony/yaml": "7.3.*",
-        "twig/extra-bundle": "^2.12|^3.0",
-        "twig/twig": "^2.12|^3.0"
+        "twig/extra-bundle": "^2.12|^3.21",
+        "twig/twig": "^2.12|^3.21.1"
     },
     "config": {
         "allow-plugins": {
@@ -97,7 +97,9 @@
         "phpstan/phpstan-deprecation-rules": "^2.0.3",
         "phpstan/phpstan-strict-rules": "^2.0.6",
         "phpstan/phpstan-symfony": "^2.0.7",
+        "phpunit/phpunit": "^12.2",
         "rector/rector": "^2.1.2",
+        "symfony/browser-kit": "7.3.*",
         "symfony/maker-bundle": "^1.64.0",
         "symfony/stopwatch": "7.3.*",
         "symfony/web-profiler-bundle": "7.3.*"

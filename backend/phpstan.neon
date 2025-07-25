@@ -3,6 +3,7 @@ parameters:
     level: 10
     paths:
         - src
+        - tests
 
     # Exclude certain files/directories
     excludePaths:
@@ -13,7 +14,7 @@ parameters:
         - migrations/
         - src/Lib/
 
-    # Error reporting
+    # Error reporting & strict checks
     reportUnmatchedIgnoredErrors: true
     checkTooWideReturnTypesInProtectedAndPublicMethods: true
     checkUninitializedProperties: true
@@ -26,16 +27,40 @@ parameters:
     polluteScopeWithAlwaysIterableForeach: true
     treatPhpDocTypesAsCertain: false
     
-    # Parallel processing
+    # Advanced strictness  
+    checkDynamicProperties: true
+    checkClassCaseSensitivity: true
+    checkFunctionNameCase: true
+    checkInternalClassCaseSensitivity: true
+    
+    # Parallel processing optimized
     parallel:
-        jobSize: 20
-        maximumNumberOfProcesses: 4
+        jobSize: 16
+        maximumNumberOfProcesses: 8
         minimumNumberOfJobsPerProcess: 2
     
-    # Cache
+    # Cache optimization
     tmpDir: var/cache/phpstan
     
     # Universal object crates
     universalObjectCratesClasses:
         - stdClass
         - App\ValueObject\GenericData
+        
+    # Type aliases for cleaner code
+    typeAliases:
+        UserId: 'positive-int'
+        TrackId: 'non-empty-string'
+        PlaylistId: 'non-empty-string'
+        
+    # Ignore patterns (minimal - prefer baseline)
+    ignoreErrors:
+        # Test-specific ignores
+        - identifier: property.uninitialized
+          path: tests/
+        - identifier: function.alreadyNarrowedType
+          path: tests/bootstrap.php
+        - identifier: if.condNotBoolean
+          path: tests/bootstrap.php
+        - identifier: staticMethod.dynamicCall
+          path: tests/

@@ -32,6 +32,18 @@ class ListeningMysqlRepository implements ListeningRepositoryInterface
     }
 
     #[\Override]
+    public function clearAll(): void
+    {
+        $this->connection->executeStatement('SET FOREIGN_KEY_CHECKS = 0');
+        $this->connection->executeStatement('TRUNCATE TABLE listening');
+        $this->connection->executeStatement('TRUNCATE TABLE author');
+        $this->connection->executeStatement('TRUNCATE TABLE track');
+        $this->connection->executeStatement('TRUNCATE TABLE artist');
+        $this->connection->executeStatement('TRUNCATE TABLE playlist');
+        $this->connection->executeStatement('SET FOREIGN_KEY_CHECKS = 1');
+    }
+
+    #[\Override]
     public function save(Listening $listening): void
     {
         try {

@@ -10,7 +10,6 @@ use App\Domain\Spotify\Entity\Playlist;
 use App\Domain\Spotify\Entity\SpotifyId;
 use App\Domain\Spotify\Entity\Track;
 use App\Domain\Spotify\Repository\ListeningRepositoryInterface;
-use Random\RandomException;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Attribute\Option;
 use Symfony\Component\Console\Command\Command;
@@ -57,8 +56,12 @@ class FixturesCommand
         $tracks = $this->generateTracks($artists);
         $io->success(sprintf('Generated %d tracks', count($tracks)));
 
-        // Generate listenings
+        // Generate listenings  
         $io->section('Generating Listenings');
+        
+        // Clear any existing data first
+        $this->listeningRepository->clearAll();
+        
         $this->generateListenings($tracks, $playlists, $count);
         $io->success(sprintf('Generated %d listenings', $count));
 
@@ -221,29 +224,32 @@ class FixturesCommand
     /**
      * @param Track[] $tracks
      * @param Playlist[] $playlists
-     * @throws RandomException
      * @throws \DateMalformedStringException
      */
     private function generateListenings(array $tracks, array $playlists, int $count): void
     {
         $now = new \DateTimeImmutable();
         $oneMonthAgo = $now->modify('-1 month');
-        $tenMinutesAgo = $now->modify('-10 minutes');
-
-        // Get the time range in seconds for random generation
-        $startTimestamp = $oneMonthAgo->getTimestamp();
-        $endTimestamp = $tenMinutesAgo->getTimestamp();
+        $yesterday = $now->modify('-1 day');
+        
+        // Calculate total minutes in the range
+        $totalMinutes = (int) $yesterday->diff($oneMonthAgo)->format('%a') * 24 * 60;
+        
+        // Predefined patterns for deterministic data
+        $trackPattern = $this->getTrackPlaybackPattern($tracks);
+        $playlistPattern = $this->getPlaylistPattern($playlists);
 
         for ($i = 0; $i < $count; ++$i) {
-            // Generate random timestamp between one month ago and 10 minutes ago
-            $randomTimestamp = random_int($startTimestamp, $endTimestamp);
-            $listeningTime = new \DateTimeImmutable()->setTimestamp($randomTimestamp);
+            // Deterministic time calculation - spread evenly across the month
+            $minuteOffset = (int) (($i / $count) * $totalMinutes);
+            $listeningTime = $oneMonthAgo->modify(sprintf('+%d minutes', $minuteOffset));
 
-            // Select random track (weighted towards popular tracks)
-            $track = $this->selectWeightedTrack($tracks);
+            // Deterministic track selection
+            $trackIndex = $i % count($trackPattern);
+            $track = $trackPattern[$trackIndex];
 
-            // 80% chance to have a playlist, 20% chance no playlist
-            $playlist = random_int(1, 100) <= 80 ? $playlists[array_rand($playlists)] : null;
+            // Deterministic playlist selection (80% with playlist, 20% without)
+            $playlist = ($i % 5) === 4 ? null : $playlistPattern[$i % count($playlistPattern)];
 
             $listening = new Listening(
                 $listeningTime,
@@ -257,38 +263,47 @@ class FixturesCommand
 
     /**
      * @param Track[] $tracks
-     * @throws RandomException
+     * @return Track[]
      */
-    private function selectWeightedTrack(array $tracks): Track
+    private function getTrackPlaybackPattern(array $tracks): array
     {
-        // Create weights (some tracks are more popular)
-        $weights = [];
-        $totalTracks = count($tracks);
-
-        for ($i = 0; $i < $totalTracks; ++$i) {
-            // Popular tracks (first 10) get higher weight
-            if ($i < 10) {
-                $weights[$i] = 5;
-            } elseif ($i < 20) {
-                $weights[$i] = 3;
-            } else {
-                $weights[$i] = 1;
+        $pattern = [];
+        
+        // Popular tracks (first 10) appear more frequently
+        for ($i = 0; $i < 10 && $i < count($tracks); ++$i) {
+            // Add popular tracks 5 times each
+            for ($j = 0; $j < 5; ++$j) {
+                $pattern[] = $tracks[$i];
             }
         }
-
-        // Weighted random selection
-        $totalWeight = array_sum($weights);
-        $randomWeight = random_int(1, $totalWeight);
-
-        $currentWeight = 0;
-        foreach ($weights as $index => $weight) {
-            $currentWeight += $weight;
-            if ($randomWeight <= $currentWeight) {
-                return $tracks[$index];
+        
+        // Moderately popular tracks (next 10) appear less frequently
+        for ($i = 10; $i < 20 && $i < count($tracks); ++$i) {
+            // Add moderately popular tracks 3 times each
+            for ($j = 0; $j < 3; ++$j) {
+                $pattern[] = $tracks[$i];
             }
         }
-
-        // Fallback to random track
-        return $tracks[array_rand($tracks)];
+        
+        // Remaining tracks appear once each
+        $counter = count($tracks);
+        
+        // Remaining tracks appear once each
+        for ($i = 20; $i < $counter; ++$i) {
+            $pattern[] = $tracks[$i];
+        }
+        
+        return $pattern;
     }
+
+    /**
+     * @param Playlist[] $playlists
+     * @return Playlist[]
+     */
+    private function getPlaylistPattern(array $playlists): array
+    {
+        // Return first 20 playlists in a repeating pattern
+        return array_slice($playlists, 0, min(20, count($playlists)));
+    }
+
 }

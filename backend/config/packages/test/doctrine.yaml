@@ -1,0 +1,5 @@
+doctrine:
+    dbal:
+        # Use test database configuration
+        url: '%env(resolve:MYSQL_DRIVER)%://%env(resolve:MYSQL_USER)%:%env(resolve:MYSQL_PASSWORD)%@%env(resolve:MYSQL_HOST)%:%env(resolve:MYSQL_PORT)%/%env(resolve:MYSQL_DATABASE)%'
+        server_version: '%env(resolve:MYSQL_VERSION)%'

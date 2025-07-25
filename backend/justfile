@@ -4,18 +4,6 @@ MESSENGER_VERBOSITY := '-v'
 PHP := 'php bin/console'
 ENV_FILE := '.env.local'
 
-docker_up: docker_build
-    docker-compose up -d
-
-docker_down:
-    docker-compose down
-
-docker_build:
-    docker-compose build
-
-docker_logs:
-    docker-compose logs -f
-
 composer_install:
     composer install
 
@@ -24,9 +12,6 @@ composer_update:
 
 composer *args='':
     composer {{args}}
-
-messenger_consume: docker_up
-    {{PHP}} messenger:consume --all {{MESSENGER_VERBOSITY}}
 
 messenger_consume_dev:
     {{PHP}} messenger:consume --all {{MESSENGER_VERBOSITY}}
@@ -40,7 +25,7 @@ messenger_stop:
 scheduler_debug:
     {{PHP}} debug:scheduler
 
-spotify_tracker_start: messenger_consume
+spotify_tracker_start: messenger_consume_dev
 
 console *args='':
     {{PHP}} {{args}}
@@ -72,20 +57,39 @@ server_stop:
 server_logs:
     symfony server:log
 
-spotify_login code:
-    docker run \
-        --rm \
-        --env-file {{ENV_FILE}} \
-        -e SPOTIFY_CODE='{{code}}' \
-        --network spotifytracker_default \
-        --name spotify-login \
-        lukamrt/spotify-tracker-scheduler
-
-docker_build_publish:
+docker_build_publish_scheduler:
     docker buildx build --platform linux/arm64 -t lukamrt/spotify-tracker-scheduler --push .
 
 phpstan:
-    vendor/bin/phpstan analyse -c phpstan.neon --memory-limit 1G
+    php vendor/phpstan/phpstan/phpstan analyse -c phpstan.neon --memory-limit 1G
 
 rector:
-    vendor/bin/rector process
+    php vendor/rector/rector/bin/rector process
+
+test:
+    @if ($IsWindows -or $env:OS -eq "Windows_NT") { just test-setup } else { just test-setup-unix }
+    {{PHP}} cache:clear --env=test
+    {{PHP}} doctrine:migrations:migrate --no-interaction --env=test
+    {{PHP}} app:fixtures --env=test
+    php vendor/phpunit/phpunit/phpunit
+
+test-unit:
+    php vendor/phpunit/phpunit/phpunit --group=unit
+
+test-e2e:
+    just test-setup
+    {{PHP}} cache:clear --env=test
+    {{PHP}} doctrine:migrations:migrate --no-interaction --env=test
+    {{PHP}} app:fixtures --env=test
+    php vendor/phpunit/phpunit/phpunit --group=e2e
+
+test-setup:
+    @if (docker ps --format "table {{{{.Names}}}}" | Select-String "mysql_test_container") { Write-Host "✓ Test database already running" } else { Write-Host "🚀 Starting test database..."; docker-compose up -d database_test; Write-Host "⏳ Waiting for database to be ready..."; for ($i = 1; $i -le 5; $i++) { Start-Sleep 1; if (docker exec mysql_test_container mysqladmin ping -h localhost --silent 2>$null) { Write-Host "✓ Database is ready!"; break }; Write-Host "   Attempt $i/5..." } }
+
+test-setup-unix:
+    @if docker ps --format "table {{{{.Names}}}}" | grep -q "mysql_test_container"; then echo "✓ Test database already running"; else echo "🚀 Starting test database..."; docker-compose up -d database_test; echo "⏳ Waiting for database to be ready..."; for i in {1..5}; do sleep 1; if docker exec mysql_test_container mysqladmin ping -h localhost --silent >/dev/null 2>&1; then echo "✓ Database is ready!"; break; fi; echo "   Attempt $i/5..."; done; fi
+
+analyse:
+    just rector
+    just phpstan
+    just test

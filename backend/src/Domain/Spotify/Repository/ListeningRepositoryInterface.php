@@ -11,6 +11,8 @@ interface ListeningRepositoryInterface
 {
     public function save(Listening $listening): void;
 
+    public function clearAll(): void;
+
     /**
      * @return Listening[]
      */

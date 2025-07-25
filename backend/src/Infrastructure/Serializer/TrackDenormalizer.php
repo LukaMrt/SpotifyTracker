@@ -35,7 +35,7 @@ class TrackDenormalizer implements DenormalizerInterface
             id: $this->spotifyIdDenormalizer->denormalize($data['id'], SpotifyId::class, $format, $context),
             name: $data['name'],
             artists: array_map(
-                fn(array $artist): \App\Domain\Spotify\Entity\Artist => new Artist(
+                fn(array $artist): Artist => new Artist(
                     id: $this->spotifyIdDenormalizer->denormalize($artist['id'], SpotifyId::class, $format, $context),
                     name: $artist['name']
                 ),

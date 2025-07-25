@@ -12,22 +12,31 @@ services:
       - ./var/lib/database:/var/lib/mysql
     ports:
       - "${MYSQL_PORT}:3306"
-  mail:
-    image: mailhog/mailhog
-    container_name: mail_container
-    ports:
-      - "${MAIL_PORT}:1025"
-      - "8025:8025"
-  scheduler:
-    build:
-        context: .
-        dockerfile: Dockerfile
-        tags:
-          - lukamrt/spotify-tracker-scheduler
-    container_name: scheduler_container
+  
+  database_test:
+    image: mysql:${MYSQL_VERSION}
+    container_name: mysql_test_container
     restart: unless-stopped
-    env_file:
-      - .env.prod
-    depends_on:
-      - mail
-      - database
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}_test
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - ./var/lib/database_test:/var/lib/mysql
+    ports:
+      - "${MYSQL_TEST_PORT:-3307}:3306"
+
+#  scheduler:
+#    build:
+#        context: .
+#        dockerfile: Dockerfile
+#        tags:
+#          - lukamrt/spotify-tracker-scheduler
+#    container_name: scheduler_container
+#    restart: unless-stopped
+#    env_file:
+#      - .env.prod
+#    depends_on:
+#      - mail
+#      - database
