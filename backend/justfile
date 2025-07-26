@@ -1,4 +1,4 @@
-set shell := ["powershell.exe", "-Command"]
+# set shell := ["powershell.exe", "-Command"]
 
 MESSENGER_VERBOSITY := '-v'
 PHP := 'php bin/console'
@@ -67,11 +67,12 @@ rector:
     php vendor/rector/rector/bin/rector process
 
 test:
-    @if ($IsWindows -or $env:OS -eq "Windows_NT") { just test-setup } else { just test-setup-unix }
+    just test-setup-unix
     {{PHP}} cache:clear --env=test
     {{PHP}} doctrine:migrations:migrate --no-interaction --env=test
     {{PHP}} app:fixtures --env=test
     php vendor/phpunit/phpunit/phpunit --coverage-html var/coverage/html
+    @echo "Coverage report: file://$(pwd)/var/coverage/html/index.html"
 
 test-unit:
     php vendor/phpunit/phpunit/phpunit --group=unit --coverage-html var/coverage/html

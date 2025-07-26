@@ -19,10 +19,11 @@ use Symfony\Component\Console\Style\SymfonyStyle;
     name: 'app:fixtures',
     description: 'Load listening fixtures with artists, tracks, playlists and listenings',
 )]
-class FixturesCommand
+readonly class FixturesCommand
 {
     public function __construct(
-        private readonly ListeningRepositoryInterface $listeningRepository,
+        private ListeningRepositoryInterface $listeningRepository,
+        private string                       $environment,
     ) {
     }
 
@@ -39,33 +40,33 @@ class FixturesCommand
         $io->title('Loading Spotify Listening Fixtures');
 
         // Generate artists
-        $io->section('Generating Artists');
+        $this->section($io, 'Generating Artists');
         
         $artists = $this->generateArtists();
-        $io->success(sprintf('Generated %d artists', count($artists)));
+        $this->success($io, sprintf('Generated %d artists', count($artists)));
 
         // Generate playlists
-        $io->section('Generating Playlists');
+        $this->section($io, 'Generating Playlists');
         
         $playlists = $this->generatePlaylists();
-        $io->success(sprintf('Generated %d playlists', count($playlists)));
+        $this->success($io, sprintf('Generated %d playlists', count($playlists)));
 
         // Generate tracks
-        $io->section('Generating Tracks');
+        $this->section($io, 'Generating Tracks');
         
         $tracks = $this->generateTracks($artists);
-        $io->success(sprintf('Generated %d tracks', count($tracks)));
+        $this->success($io, sprintf('Generated %d tracks', count($tracks)));
 
-        // Generate listenings  
-        $io->section('Generating Listenings');
+        // Generate listening
+        $this->section($io, 'Generating Listenings');
         
         // Clear any existing data first
         $this->listeningRepository->clearAll();
         
-        $this->generateListenings($tracks, $playlists, $count);
-        $io->success(sprintf('Generated %d listenings', $count));
+        $this->generateListening($tracks, $playlists, $count);
+        $this->success($io, sprintf('Generated %d listening', $count));
 
-        $io->success('All fixtures loaded successfully!');
+        $this->success($io, 'Listening fixtures loaded successfully!', true);
 
         return Command::SUCCESS;
     }
@@ -224,9 +225,8 @@ class FixturesCommand
     /**
      * @param Track[] $tracks
      * @param Playlist[] $playlists
-     * @throws \DateMalformedStringException
      */
-    private function generateListenings(array $tracks, array $playlists, int $count): void
+    private function generateListening(array $tracks, array $playlists, int $count): void
     {
         $now = new \DateTimeImmutable();
         $oneMonthAgo = $now->modify('-1 month');
@@ -242,7 +242,11 @@ class FixturesCommand
         for ($i = 0; $i < $count; ++$i) {
             // Deterministic time calculation - spread evenly across the month
             $minuteOffset = (int) (($i / $count) * $totalMinutes);
-            $listeningTime = $oneMonthAgo->modify(sprintf('+%d minutes', $minuteOffset));
+            try {
+                $listeningTime = $oneMonthAgo->modify(sprintf('+%d minutes', $minuteOffset));
+            } catch (\DateMalformedStringException) {
+                $listeningTime = new \DateTimeImmutable();
+            }
 
             // Deterministic track selection
             $trackIndex = $i % count($trackPattern);
@@ -306,4 +310,19 @@ class FixturesCommand
         return array_slice($playlists, 0, min(20, count($playlists)));
     }
 
+    private function success(SymfonyStyle $io, string $message, bool $important = false): void
+    {
+        if ($this->environment === 'dev') {
+            $io->success($message);
+        } elseif ($important) {
+            $io->success($message);
+        }
+    }
+
+    private function section(SymfonyStyle $io, string $message): void
+    {
+        if ($this->environment === 'dev') {
+            $io->section($message);
+        }
+    }
 }

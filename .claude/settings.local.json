@@ -7,7 +7,8 @@
       "Bash(just backend:*)",
       "Bash(just:*)",
       "Bash(php vendor/phpunit/phpunit/phpunit:*)",
-      "Bash(composer config:*)"
+      "Bash(composer config:*)",
+      "Bash(php:*)"
     ],
     "deny": []
   }

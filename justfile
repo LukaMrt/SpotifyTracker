@@ -1,5 +1,5 @@
 # Root justfile for SpotifyTracker project
-set shell := ["powershell.exe", "-Command"]
+#set shell := ["powershell.exe", "-Command"]
 
 # Forward backend commands to backend directory
 backend *args:
