@@ -1,0 +1,37 @@
+{
+  "name": "Spotify Tracker Backend",
+  "dockerComposeFile": [
+    "../compose.yaml",
+    "docker-compose.override.yml"
+  ],
+  "service": "app",
+  "workspaceFolder": "/workspace",
+  "shutdownAction": "stopCompose",
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "bmewburn.vscode-intelephense-client",
+        "ms-vscode.vscode-json",
+        "bradlc.vscode-tailwindcss",
+        "formulahendry.auto-rename-tag",
+        "christian-kohler.path-intellisense",
+        "editorconfig.editorconfig",
+        "ms-azuretools.vscode-docker"
+      ],
+      "settings": {
+        "php.validate.executablePath": "/usr/local/bin/php",
+        "php.debug.executablePath": "/usr/local/bin/php",
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+  "postCreateCommand": "composer install && just cache-clear",
+  "remoteUser": "vscode",
+  "mounts": [
+    "source=${localWorkspaceFolder}/../,target=/workspace,type=bind,consistency=cached"
+  ]
+}

@@ -1,0 +1,30 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: spotify_tracker_devcontainer
+    volumes:
+      - ../:/workspace:cached
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /workspace/backend
+    command: sleep infinity
+    environment:
+      - PHP_IDE_CONFIG=serverName=localhost
+    networks:
+      - default
+    depends_on:
+      - database_test
+      - database
+
+  database:
+    networks:
+      - default
+
+  database_test:
+    networks:
+      - default
+
+networks:
+  default:
+    name: spotify_tracker_devcontainer_network
