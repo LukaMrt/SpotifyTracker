@@ -14,12 +14,6 @@ use Symfony\Component\HttpFoundation\Response;
 final class ListeningApiTest extends WebTestCase
 {
     #[\Override]
-    public static function setUpBeforeClass(): void
-    {
-        parent::setUpBeforeClass();
-    }
-
-    #[\Override]
     protected function setUp(): void
     {
         parent::setUp();
