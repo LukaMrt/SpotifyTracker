@@ -1,6 +1,8 @@
 # Root justfile for SpotifyTracker project
 #set shell := ["powershell.exe", "-Command"]
 
+default: help
+
 # Forward backend commands to backend directory
 backend *args:
     cd backend; just {{args}}
@@ -12,5 +14,3 @@ backend-help:
 help:
     echo "Available commands:"
     echo "  backend [command] : Run backend commands"
-
-default: help

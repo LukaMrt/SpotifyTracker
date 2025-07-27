@@ -12,21 +12,18 @@ services:
       - ./var/lib/database:/var/lib/mysql
     ports:
       - "${MYSQL_PORT}:3306"
-  
+
   database_test:
     image: mysql:${MYSQL_VERSION}
     container_name: mysql_test_container
-    restart: unless-stopped
+    restart: no
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}_test
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    volumes:
-      - ./var/lib/database_test:/var/lib/mysql
     ports:
       - "${MYSQL_TEST_PORT:-3307}:3306"
-
 #  scheduler:
 #    build:
 #        context: .

@@ -8,7 +8,8 @@
       "Bash(just:*)",
       "Bash(php vendor/phpunit/phpunit/phpunit:*)",
       "Bash(composer config:*)",
-      "Bash(php:*)"
+      "Bash(php:*)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ],
     "deny": []
   }

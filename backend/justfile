@@ -1,8 +1,10 @@
-# set shell := ["powershell.exe", "-Command"]
+set shell := ["bash", "-c"]
 
-MESSENGER_VERBOSITY := '-v'
+# Variables
 PHP := 'php bin/console'
-ENV_FILE := '.env.local'
+MESSENGER_VERBOSITY := '-v'
+
+# === DEPENDENCIES ===
 
 composer_install:
     composer install
@@ -13,28 +15,26 @@ composer_update:
 composer *args='':
     composer {{args}}
 
-messenger_consume_dev:
-    {{PHP}} messenger:consume --all {{MESSENGER_VERBOSITY}}
+# === DEVELOPMENT SERVER ===
 
-messenger_debug:
-    {{PHP}} debug:messenger
+server_start:
+    symfony server:start --allow-all-ip
 
-messenger_stop:
-    {{PHP}} messenger:stop-workers
+server_stop:
+    symfony server:stop
 
-scheduler_debug:
-    {{PHP}} debug:scheduler
+server_logs:
+    symfony server:log
 
-spotify_tracker_start: messenger_consume_dev
-
-console *args='':
-    {{PHP}} {{args}}
+# === CACHE ===
 
 cache_clear:
     {{PHP}} cache:clear
 
 cache_warmup: cache_clear
     {{PHP}} cache:warmup
+
+# === DATABASE ===
 
 migration_new:
     {{PHP}} doctrine:migrations:generate
@@ -48,26 +48,33 @@ migration_apply:
 fixtures options='-c 100':
     {{PHP}} app:fixtures {{options}}
 
-server_start:
-    symfony server:start --allow-all-ip
+# === MESSENGER ===
 
-server_stop:
-    symfony server:stop
+messenger_consume_dev:
+    {{PHP}} messenger:consume --all {{MESSENGER_VERBOSITY}}
 
-server_logs:
-    symfony server:log
+messenger_debug:
+    {{PHP}} debug:messenger
 
-docker_build_publish_scheduler:
-    docker buildx build --platform linux/arm64 -t lukamrt/spotify-tracker-scheduler --push .
+messenger_stop:
+    {{PHP}} messenger:stop-workers
 
-phpstan:
-    php vendor/phpstan/phpstan/phpstan analyse -c phpstan.neon --memory-limit 1G
+# === SCHEDULER ===
 
-rector:
-    php vendor/rector/rector/bin/rector process
+scheduler_debug:
+    {{PHP}} debug:scheduler
+
+# === APPLICATION ===
+
+spotify_tracker_start: messenger_consume_dev
+
+console *args='':
+    {{PHP}} {{args}}
+
+# === TESTING ===
 
 test:
-    just test-setup-unix
+    just test-setup
     {{PHP}} cache:clear --env=test
     {{PHP}} doctrine:migrations:migrate --no-interaction --env=test
     {{PHP}} app:fixtures --env=test
@@ -85,10 +92,22 @@ test-e2e:
     php vendor/phpunit/phpunit/phpunit --group=e2e --coverage-html var/coverage/html
 
 test-setup:
-    @if (docker ps --format "table {{{{.Names}}}}" | Select-String "mysql_test_container") { Write-Host "✓ Test database already running" } else { Write-Host "🚀 Starting test database..."; docker-compose up -d database_test; Write-Host "⏳ Waiting for database to be ready..."; for ($i = 1; $i -le 5; $i++) { Start-Sleep 1; if (docker exec mysql_test_container mysqladmin ping -h localhost --silent 2>$null) { Write-Host "✓ Database is ready!"; break }; Write-Host "   Attempt $i/5..." } }
-
-test-setup-unix:
-    @if docker ps --format "table {{{{.Names}}}}" | grep -q "mysql_test_container"; then echo "✓ Test database already running"; else echo "🚀 Starting test database..."; docker-compose up -d database_test; echo "⏳ Waiting for database to be ready..."; for i in {1..5}; do sleep 1; if docker exec mysql_test_container mysqladmin ping -h localhost --silent >/dev/null 2>&1; then echo "✓ Database is ready!"; break; fi; echo "   Attempt $i/5..."; done; fi
+    #!/bin/bash
+    if docker ps --format "table {{{{ .Names }}}}" | grep -q "mysql_test_container"; then
+        echo "✓ Test database already running"
+    else
+        echo "🚀 Starting test database..."
+        docker-compose -f compose.yaml --env-file .env.test up -d database_test
+        echo "⏳ Waiting for database to be ready..."
+        for i in {1..5}; do
+            sleep 1
+            if docker exec mysql_test_container mysqladmin ping -h localhost --silent >/dev/null 2>&1; then
+                echo "✓ Database is ready!"
+                break
+            fi
+            echo "   Attempt $i/5..."
+        done
+    fi
 
 mutation:
     just test-setup
@@ -97,13 +116,40 @@ mutation:
     {{PHP}} app:fixtures --env=test
     php vendor/infection/infection/bin/infection --threads=4 --min-msi=80 --min-covered-msi=85
 
+# === REPORTS ===
+
 mutation-report:
-    @if (Test-Path "var/infection/infection.html") { Write-Host "✓ Opening mutation testing report..."; Start-Process "var/infection/infection.html" } else { Write-Host "❌ No mutation report found. Run 'just mutation' first." }
+    #!/bin/bash
+    if [ -f "var/infection/infection.html" ]; then
+        echo "✓ Opening mutation testing report..."
+        xdg-open "var/infection/infection.html" 2>/dev/null || open "var/infection/infection.html" 2>/dev/null || echo "Open var/infection/infection.html manually"
+    else
+        echo "❌ No mutation report found. Run 'just mutation' first."
+    fi
 
 coverage-report:
-    @if (Test-Path "var/coverage/html/index.html") { Write-Host "✓ Opening coverage report..."; Start-Process "var/coverage/html/index.html" } else { Write-Host "❌ No coverage report not found. Run tests first." }
+    #!/bin/bash
+    if [ -f "var/coverage/html/index.html" ]; then
+        echo "✓ Opening coverage report..."
+        xdg-open "var/coverage/html/index.html" 2>/dev/null || open "var/coverage/html/index.html" 2>/dev/null || echo "Open var/coverage/html/index.html manually"
+    else
+        echo "❌ No coverage report found. Run tests first."
+    fi
+
+# === CODE QUALITY ===
+
+phpstan:
+    php vendor/phpstan/phpstan/phpstan analyse -c phpstan.neon --memory-limit 1G
+
+rector:
+    php vendor/rector/rector/bin/rector process
 
 analyse:
     just rector
     just phpstan
     just test
+
+# === DOCKER ===
+
+docker_build_publish_scheduler:
+    docker buildx build --platform linux/arm64 -t lukamrt/spotify-tracker-scheduler --push .

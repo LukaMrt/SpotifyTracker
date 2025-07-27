@@ -1,0 +1,60 @@
+{
+	"name": "Spotify Tracker",
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
+	"runArgs": ["--network=host"],
+	"workspaceFolder": "/workspace",
+	"mounts": [
+		"source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+		"source=spotify-tracker-node-modules,target=/workspace/node_modules,type=volume",
+		"source=spotify-tracker-vendor,target=/workspace/backend/vendor,type=volume",
+		"source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+	],
+	"forwardPorts": [8000],
+	"portsAttributes": {
+		"8000": {
+			"label": "Symfony Server",
+			"onAutoForward": "notify"
+		}
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-vscode.vscode-json",
+				"bmewburn.vscode-intelephense-client",
+				"xdebug.php-debug",
+				"formulahendry.auto-rename-tag",
+				"ms-azuretools.vscode-docker",
+				"bradlc.vscode-tailwindcss",
+				"esbenp.prettier-vscode",
+				"mikestead.dotenv",
+				"redhat.vscode-yaml",
+				"PKief.material-icon-theme",
+				"anthropic.claude-dev",
+				"phpactor.vscode-phpactor-extension",
+				"cweijan.vscode-database-client2",
+				"skellock.just",
+				"isudox.vscode-jetbrains-keybindings"
+			],
+			"settings": {
+				"php.validate.executablePath": "/usr/local/bin/php",
+				"php.suggest.basic": false,
+				"intelephense.files.maxSize": 5000000,
+				"intelephense.environment.phpVersion": "8.4.0",
+				"files.associations": {
+					"*.env.local": "properties",
+					"*.env.dev": "properties",
+					"*.env.prod": "properties",
+					"composer.lock": "json"
+				},
+				"editor.formatOnSave": true,
+				"editor.codeActionsOnSave": {
+					"source.fixAll": "explicit"
+				}
+			}
+		}
+	},
+	"postCreateCommand": "cd backend && composer install && php bin/console cache:clear",
+	"remoteUser": "root"
+}
