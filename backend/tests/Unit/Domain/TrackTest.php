@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Domain;
 
+use Symfony\Component\Validator\ConstraintViolationInterface;
 use App\Domain\Spotify\Entity\Artist;
 use App\Domain\Spotify\Entity\SpotifyId;
 use App\Domain\Spotify\Entity\Track;
@@ -21,7 +22,9 @@ final class TrackTest extends KernelTestCase
     {
         parent::setUp();
         self::bootKernel();
-        $this->validator = static::getContainer()->get('validator');
+        $validator = static::getContainer()->get('validator');
+        $this->assertInstanceOf(ValidatorInterface::class, $validator);
+        $this->validator = $validator;
     }
 
     public function testTrackWithEmptyArtists_ShouldHaveValidationErrors(): void
@@ -37,8 +40,10 @@ final class TrackTest extends KernelTestCase
 
         // Then
         $this->assertCount(1, $violations);
-        $this->assertSame('Track must have at least one artist', $violations[0]->getMessage());
-        $this->assertSame('artists', $violations[0]->getPropertyPath());
+        $violation = $violations[0];
+        $this->assertInstanceOf(ConstraintViolationInterface::class, $violation);
+        $this->assertSame('Track must have at least one artist', $violation->getMessage());
+        $this->assertSame('artists', $violation->getPropertyPath());
     }
 
     public function testTrackWithArtists_ShouldHaveNoValidationErrors(): void

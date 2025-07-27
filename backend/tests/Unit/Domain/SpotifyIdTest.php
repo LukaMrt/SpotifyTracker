@@ -19,7 +19,9 @@ final class SpotifyIdTest extends KernelTestCase
     {
         parent::setUp();
         self::bootKernel();
-        $this->validator = static::getContainer()->get('validator');
+        $validator = static::getContainer()->get('validator');
+        $this->assertInstanceOf(ValidatorInterface::class, $validator);
+        $this->validator = $validator;
     }
 
     public function testSpotifyIdWithInvalidFormat_ShouldHaveValidationErrors(): void
