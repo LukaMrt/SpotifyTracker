@@ -1,41 +1,39 @@
-# Utiliser une image Alpine plus légère avec PHP
-FROM php:8.4-cli-alpine
+# 🐧 Utiliser Debian au lieu d'Alpine pour compatibilité binaires natifs
+FROM php:8.4-cli-bookworm
 
-# Installer les dépendances de base
-RUN apk add --no-cache \
+# 📦 Installer les dépendances de base
+RUN apt-get update && apt-get install -y \
     git \
     curl \
     wget \
     unzip \
     bash \
-    mysql-client \
-    nodejs \
-    npm \
-    docker \
-    docker-cli-compose
+    default-mysql-client \
+    ca-certificates \
+    gnupg \
+    && rm -rf /var/lib/apt/lists/*
 
-# Installer les bibliothèques runtime nécessaires
-RUN apk add --no-cache --update \
-    libzip \
-    libpng \
-    freetype \
-    libjpeg-turbo \
-    libxml2 \
-    icu \
-    oniguruma \
-    linux-headers
+# 🐳 Installer Docker Compose (version standalone)
+RUN curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose \
+    && chmod +x /usr/local/bin/docker-compose
 
-# Installer les extensions PHP nécessaires
-RUN apk add --no-cache --virtual .build-deps \
-    $PHPIZE_DEPS \
+# 🟢 Installer la dernière version de Node.js (current)
+RUN curl -fsSL https://deb.nodesource.com/setup_current.x | bash - \
+    && apt-get install -y nodejs
+
+# 📚 Installer les bibliothèques de développement pour PHP
+RUN apt-get update && apt-get install -y \
     libzip-dev \
     libpng-dev \
-    freetype-dev \
-    libjpeg-turbo-dev \
+    libfreetype6-dev \
+    libjpeg62-turbo-dev \
     libxml2-dev \
-    icu-dev \
-    oniguruma-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    libicu-dev \
+    libonig-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# 🔧 Installer les extensions PHP
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
     pdo_mysql \
     mysqli \
@@ -46,8 +44,7 @@ RUN apk add --no-cache --virtual .build-deps \
     bcmath \
     intl \
     && pecl install xdebug \
-    && docker-php-ext-enable xdebug \
-    && apk del .build-deps
+    && docker-php-ext-enable xdebug
 
 # Configuration Xdebug
 RUN echo "xdebug.mode=debug,coverage" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
@@ -59,11 +56,15 @@ RUN echo "xdebug.mode=debug,coverage" >> /usr/local/etc/php/conf.d/docker-php-ex
 # Installer Composer
 COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 
-# Installer Just
-RUN apk add --no-cache just
+# 🛠️ Installer Just (command runner)
+RUN curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin
 
 # Installer Claude Code CLI via npm
 RUN npm install -g @anthropic-ai/claude-code
+
+# 🎼 Installer Symfony CLI
+RUN curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.deb.sh' | bash \
+    && apt-get update && apt-get install -y symfony-cli && rm -rf /var/lib/apt/lists/*
 
 # Créer le répertoire de travail
 WORKDIR /workspace

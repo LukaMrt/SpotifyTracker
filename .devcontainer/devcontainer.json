@@ -11,10 +11,14 @@
 		"source=spotify-tracker-vendor,target=/workspace/backend/vendor,type=volume",
 		"source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
 	],
-	"forwardPorts": [8000],
+	"forwardPorts": [8000, 3000],
 	"portsAttributes": {
 		"8000": {
 			"label": "Symfony Server",
+			"onAutoForward": "notify"
+		},
+		"3000": {
+			"label": "React Frontend",
 			"onAutoForward": "notify"
 		}
 	},
@@ -31,7 +35,7 @@
 				"mikestead.dotenv",
 				"redhat.vscode-yaml",
 				"PKief.material-icon-theme",
-				"anthropic.claude-dev",
+				"anthropic.claude-code",
 				"phpactor.vscode-phpactor-extension",
 				"cweijan.vscode-database-client2",
 				"skellock.just",
@@ -55,6 +59,6 @@
 			}
 		}
 	},
-	"postCreateCommand": "cd backend && composer install && php bin/console cache:clear",
+	"postCreateCommand": "cd backend && composer install && php bin/console cache:clear && cd ../frontend && npm install",
 	"remoteUser": "root"
 }

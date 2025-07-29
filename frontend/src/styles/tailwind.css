@@ -1,0 +1,31 @@
+/* 🎨 TAILWIND CSS v4 CONFIGURATION */
+@import 'tailwindcss';
+
+/* 🔧 Configuration personnalisée pour Tailwind v4 */
+@config "../../tailwind.config.js";
+
+/* ✨ Classes personnalisées pour Spotify */
+@layer components {
+  .btn-spotify {
+    background: #1db954;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+  }
+
+  .btn-spotify:hover {
+    background: #16a045;
+  }
+
+  .card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.2s;
+  }
+
+  .card:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+}

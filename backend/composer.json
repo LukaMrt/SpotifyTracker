@@ -12,6 +12,7 @@
         "doctrine/migrations": ">=3.9.1",
         "jwilsson/spotify-web-api-php": "^6.2",
         "nelmio/api-doc-bundle": ">=5.4",
+        "nelmio/cors-bundle": "^2.5",
         "symfony/asset": "7.3.*",
         "symfony/cache": "7.3.*",
         "symfony/console": "7.3.*",

@@ -11,6 +11,7 @@ use Nelmio\ApiDocBundle\NelmioApiDocBundle;
 use Symfony\Bundle\TwigBundle\TwigBundle;
 use Twig\Extra\TwigExtraBundle\TwigExtraBundle;
 use Symfony\Bundle\WebProfilerBundle\WebProfilerBundle;
+use Nelmio\CorsBundle\NelmioCorsBundle;
 
 return [
     FrameworkBundle::class => ['all' => true],
@@ -22,4 +23,5 @@ return [
     TwigBundle::class => ['all' => true],
     TwigExtraBundle::class => ['all' => true],
     WebProfilerBundle::class => ['dev' => true, 'test' => true],
+    NelmioCorsBundle::class => ['all' => true],
 ];

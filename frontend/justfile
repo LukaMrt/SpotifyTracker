@@ -1,0 +1,127 @@
+set shell := ["bash", "-c"]
+
+# Variables
+NODE_ENV := env_var_or_default('NODE_ENV', 'development')
+
+# === DEPENDENCIES ===
+
+# Install dependencies
+install:
+    npm install
+
+# Clean install (removes node_modules first)
+install-clean:
+    rm -rf node_modules package-lock.json
+    npm install
+
+# Update dependencies
+deps-update:
+    npm update
+
+# Check for vulnerabilities
+audit:
+    npm audit
+
+# === DEVELOPMENT ===
+
+# Start development server
+dev:
+    npm run dev
+
+# Start development server accessible from network
+dev-host:
+    npm run dev -- --host
+
+# === BUILD ===
+
+# Build for production
+build:
+    npm run build
+
+# Preview production build
+preview:
+    npm run preview
+
+# === CODE QUALITY ===
+
+# Run ESLint
+lint:
+    npm run lint
+
+# Run ESLint with auto-fix
+lint-fix:
+    npm run lint:fix
+
+# Format code with Prettier
+format:
+    npm run format
+
+# Check code formatting
+format-check:
+    npm run format:check
+
+# Run TypeScript type checking
+type-check:
+    npm run type-check
+
+# Run all quality checks
+check-all:
+    just format-check
+    just lint
+    just type-check
+    @echo "✅ All checks passed!"
+
+# Fix all auto-fixable issues
+fix-all:
+    just format
+    just lint-fix
+    @echo "✅ All fixes applied!"
+
+# === TESTING ===
+
+# Run all tests once
+test:
+    npm run test
+
+# Run tests in watch mode (re-run on file changes)
+test-watch:
+    npm run test:watch
+
+# Run tests with coverage report
+test-coverage:
+    npm run test:coverage
+    @echo "✅ Coverage report: file://$(pwd)/coverage/index.html"; \
+
+# Run tests with UI (browser interface)
+test-ui:
+    npm run test:ui
+
+# Run only unit tests
+test-unit:
+    npm run test -- --reporter=verbose src/**/*.test.ts
+
+# Run only component tests  
+test-components:
+    npm run test -- --reporter=verbose src/**/*.test.tsx
+
+# === MAINTENANCE ===
+
+# Clean build artifacts and caches
+clean:
+    rm -rf dist/
+    rm -rf node_modules/.vite/
+    rm -rf node_modules/.cache/
+    @echo "✅ Cleaned build artifacts"
+
+# Clean everything (build + node_modules)
+clean-all: clean
+    rm -rf node_modules/
+    @echo "✅ Cleaned everything"
+
+# Show project info
+info:
+    @echo "📦 Frontend Project Info"
+    @echo "Node version: $(node --version)"
+    @echo "NPM version: $(npm --version)"
+    @echo "Environment: {{NODE_ENV}}"
+    @npm list --depth=0

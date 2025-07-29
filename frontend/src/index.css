@@ -1,0 +1,16 @@
+/* 🎨 IMPORT TAILWIND CSS */
+@import './styles/tailwind.css';
+
+/* 🔧 Reset et base personnalisée */
+body {
+  margin: 0;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

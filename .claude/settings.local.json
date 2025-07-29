@@ -10,7 +10,11 @@
       "Bash(composer config:*)",
       "Bash(php:*)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm install:*)",
+      "Bash(find:*)",
+      "Bash(npm run type-check:*)"
     ],
     "deny": []
   }

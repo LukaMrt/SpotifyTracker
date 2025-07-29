@@ -5,7 +5,11 @@ default: help
 
 # Forward backend commands to backend directory
 backend *args:
-    cd backend; just {{args}}
+    cd backend && just {{args}}
+
+#Forward frontend commands to frontend directory
+frontend *args:
+    cd frontend && just {{args}}
 
 # Show available backend commands
 backend-help:
